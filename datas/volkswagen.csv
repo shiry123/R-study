@@ -1,0 +1,28 @@
+model,displ,year,cyl,trans,drv,cty,hwy,fl,class
+gti,2,1999,4,manual(m5),f,21,29,r,compact
+gti,2,1999,4,auto(l4),f,19,26,r,compact
+gti,2,2008,4,manual(m6),f,21,29,p,compact
+gti,2,2008,4,auto(s6),f,22,29,p,compact
+gti,2.8,1999,6,manual(m5),f,17,24,r,compact
+jetta,1.9,1999,4,manual(m5),f,33,44,d,compact
+jetta,2,1999,4,manual(m5),f,21,29,r,compact
+jetta,2,1999,4,auto(l4),f,19,26,r,compact
+jetta,2,2008,4,auto(s6),f,22,29,p,compact
+jetta,2,2008,4,manual(m6),f,21,29,p,compact
+jetta,2.5,2008,5,auto(s6),f,21,29,r,compact
+jetta,2.5,2008,5,manual(m5),f,21,29,r,compact
+jetta,2.8,1999,6,auto(l4),f,16,23,r,compact
+jetta,2.8,1999,6,manual(m5),f,17,24,r,compact
+new beetle,1.9,1999,4,manual(m5),f,35,44,d,subcompact
+new beetle,1.9,1999,4,auto(l4),f,29,41,d,subcompact
+new beetle,2,1999,4,manual(m5),f,21,29,r,subcompact
+new beetle,2,1999,4,auto(l4),f,19,26,r,subcompact
+new beetle,2.5,2008,5,manual(m5),f,20,28,r,subcompact
+new beetle,2.5,2008,5,auto(s6),f,20,29,r,subcompact
+passat,1.8,1999,4,manual(m5),f,21,29,p,midsize
+passat,1.8,1999,4,auto(l5),f,18,29,p,midsize
+passat,2,2008,4,auto(s6),f,19,28,p,midsize
+passat,2,2008,4,manual(m6),f,21,29,p,midsize
+passat,2.8,1999,6,auto(l5),f,16,26,p,midsize
+passat,2.8,1999,6,manual(m5),f,18,26,p,midsize
+passat,3.6,2008,6,auto(s6),f,17,26,p,midsize

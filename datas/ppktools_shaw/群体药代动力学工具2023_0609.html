@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.475">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="sg">
+
+<title>衔接Phoenix NLME群体药代动力学建模的R工具集</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="群体药代动力学工具2023_0609_files/libs/clipboard/clipboard.min.js"></script>
+<script src="群体药代动力学工具2023_0609_files/libs/quarto-html/quarto.js"></script>
+<script src="群体药代动力学工具2023_0609_files/libs/quarto-html/popper.min.js"></script>
+<script src="群体药代动力学工具2023_0609_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="群体药代动力学工具2023_0609_files/libs/quarto-html/anchor.min.js"></script>
+<link href="群体药代动力学工具2023_0609_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="群体药代动力学工具2023_0609_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="群体药代动力学工具2023_0609_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="群体药代动力学工具2023_0609_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="群体药代动力学工具2023_0609_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">衔接Phoenix NLME群体药代动力学建模的R工具集</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>sg </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p><strong>前言：</strong>本人日常开展频繁的群体药代建模工作，因此产生了将重复的分析流程打包为自定义函数以简化日常使用的想法，遂撰写本文档。</p>
+<p><strong>日期：</strong>2023年6月08日</p>
+<p><strong>案例数据获取：</strong></p>
+<p><strong>自制cheat sheet：</strong></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87/relationship2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+<section id="前置准备" class="level1">
+<h1>0. 前置准备</h1>
+<section id="依赖的包" class="level2">
+<h2 class="anchored" data-anchor-id="依赖的包">0.1依赖的包</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reshape2)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gridExtra)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mcr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: parallel</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: robslopes</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(openxlsx)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'openxlsx' was built under R version 4.2.3</code></pre>
+</div>
+</div>
+</section>
+<section id="自定义主题" class="level2">
+<h2 class="anchored" data-anchor-id="自定义主题">0.1自定义主题</h2>
+<p>下文图片全部以ggplot生成，因此先准备指定的图形主题，提升可读性。将我需要的风格设置汇总于对象sgtheme0</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>sgtheme0 <span class="ot">&lt;-</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text=</span><span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">10</span>),</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title.x=</span><span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">12</span>),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title.y=</span><span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">12</span>),</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.text=</span><span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">10</span>),</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.position=</span><span class="st">"none"</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.line=</span><span class="fu">element_line</span>(<span class="at">colour=</span><span class="st">"black"</span>, <span class="at">linewidth=</span><span class="fl">0.8</span>),</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.ticks=</span><span class="fu">element_line</span>(<span class="at">colour=</span><span class="st">"black"</span>, <span class="at">linewidth=</span><span class="fl">0.8</span>),</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid.major =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数lus" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数lus">0.2自定义函数lus</h2>
+<p>这个函数的作用，是根据给定的数据向量，生成一组合适的数值下限、上限和步进。用于生成合适间距，合适标签的统计图形。lus是lower, upper, skip的缩写。</p>
+<p>count_zeros函数用来计数小数前有多少个零，如x绝对值大于1，则返回0；如x=0，则返回0。</p>
+<p>sgceil函数，sgflr函数可返回输入数字的首位有效数字的向上整数或向下整数。</p>
+<p>sgceil2函数，sgflr2函数是一组适应小数的向上取整函数和向下取整函数。</p>
+<p>lujudgment函数能根据阈值将上下限吸附到0。</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>count_zeros <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">abs</span>(x) <span class="sc">&gt;=</span> <span class="dv">1</span> <span class="sc">|</span> x<span class="sc">==</span><span class="dv">0</span>) {</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="dv">0</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">ceiling</span>(<span class="sc">-</span><span class="fu">log10</span>(<span class="fu">abs</span>(x))))</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>sgflr <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">abs</span>(x)<span class="sc">&gt;=</span><span class="dv">1</span> <span class="sc">|</span> x<span class="sc">==</span><span class="dv">0</span>){</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    y<span class="ot">=</span><span class="fu">floor</span>(x)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    y<span class="ot">=</span><span class="fu">sgflr</span>(x<span class="sc">*</span><span class="dv">10</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(y)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>sgceil <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">abs</span>(x)<span class="sc">&gt;=</span><span class="dv">1</span> <span class="sc">|</span> x<span class="sc">==</span><span class="dv">0</span>){</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    y<span class="ot">=</span><span class="fu">ceiling</span>(x)</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    y<span class="ot">=</span><span class="fu">sgceil</span>(x<span class="sc">*</span><span class="dv">10</span>)</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(y)</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>sgflr2 <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  y<span class="ot">=</span><span class="fu">sgflr</span>(x)<span class="sc">*</span><span class="dv">10</span><span class="sc">^</span>(<span class="sc">-</span><span class="fu">count_zeros</span>(x))</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(y)</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>sgceil2 <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>  y<span class="ot">=</span><span class="fu">sgceil</span>(x)<span class="sc">*</span><span class="dv">10</span><span class="sc">^</span>(<span class="sc">-</span><span class="fu">count_zeros</span>(x))</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(y)</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>lujudgment <span class="ot">&lt;-</span> <span class="cf">function</span>(lower,upper,<span class="at">threshold=</span><span class="fl">0.66</span>){</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>  pneg <span class="ot">&lt;-</span> <span class="fu">abs</span>(upper)<span class="sc">/</span><span class="fu">abs</span>(upper<span class="sc">-</span>lower)</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>  ppos <span class="ot">&lt;-</span> <span class="fu">abs</span>(lower)<span class="sc">/</span><span class="fu">abs</span>(upper<span class="sc">-</span>lower)</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (lower<span class="sc">*</span>upper<span class="sc">&lt;=</span><span class="dv">0</span>){</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">c</span>(lower,upper))</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">sum</span>(lower,upper)<span class="sc">&lt;</span><span class="dv">0</span>){</span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (pneg<span class="sc">&lt;=</span>threshold) {</span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">c</span>(lower,<span class="dv">0</span>))</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">c</span>(lower,upper))</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (ppos<span class="sc">&lt;=</span>threshold) {</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">c</span>(<span class="dv">0</span>,upper))</span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">c</span>(lower,upper))</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>lus <span class="ot">&lt;-</span> <span class="cf">function</span>(vec,<span class="at">intv=</span><span class="dv">5</span>){</span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>  upper0 <span class="ot">&lt;-</span> <span class="fu">sgceil2</span>(<span class="fu">max</span>(vec,<span class="at">na.rm =</span> T))</span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>  lower0 <span class="ot">&lt;-</span> <span class="fu">sgflr2</span>(<span class="fu">min</span>(vec,<span class="at">na.rm =</span> T))</span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>  upper1 <span class="ot">&lt;-</span> <span class="fu">lujudgment</span>(<span class="at">lower =</span> lower0,<span class="at">upper =</span> upper0)[<span class="dv">2</span>]</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>  lower1 <span class="ot">&lt;-</span> <span class="fu">lujudgment</span>(<span class="at">lower =</span> lower0,<span class="at">upper =</span> upper0)[<span class="dv">1</span>]</span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>  skip <span class="ot">&lt;-</span> <span class="fu">signif</span>((upper1<span class="sc">-</span>lower1)<span class="sc">/</span>intv,<span class="at">digits =</span> <span class="dv">0</span>)</span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">c</span>(<span class="at">lower=</span>lower1,<span class="at">upper=</span>upper1,<span class="at">skip=</span>skip))</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数import_excel" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数import_excel">0.3自定义函数import_excel</h2>
+<p>本函数能够帮助批量导入文件夹目录下的所有read_excel能读取的excel文件，参数有：</p>
+<ol type="1">
+<li><p>list_path：该文件夹目录的有效路径，比如”./PTA/lzd_pta/“；</p></li>
+<li><p>excel_type：该文件的后缀名的字符，如”.xlsx”或”.xls”；</p></li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>import_excel <span class="ot">&lt;-</span> <span class="cf">function</span>(list_path,excel_type) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(readxl)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  file_names <span class="ot">&lt;-</span> <span class="fu">list.files</span>(<span class="at">path =</span> list_path ,<span class="at">pattern =</span> <span class="fu">paste0</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">"</span>,excel_type,<span class="st">"$"</span>))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  file_names1 <span class="ot">&lt;-</span> <span class="fu">gsub</span>(excel_type,<span class="st">""</span>,file_names)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  file_names2 <span class="ot">&lt;-</span> <span class="fu">paste0</span>(list_path,file_names)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  list_data <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(file_names)) {</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    list_data[[file_names1[i]]] <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(file_names2[i])</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(list_data)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="处理数据和描述性作图" class="level1">
+<h1>1.处理数据和描述性作图</h1>
+<p>一般最先获得的数据是id、1时浓度、2时浓度……这样的短数据格式，比如：</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87/001.jpg" class="img-fluid figure-img"></p>
+</figure>
+</div>
+<p>该数据框其实是id和时间两个维度交织成的矩阵，填充以浓度。但是分析中需要使用如下形式的长数据格式：</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87/002.jpg" class="img-fluid figure-img"></p>
+</figure>
+</div>
+<p>短数据格式里的时间变成了time0，表示采样点距离最后一次给药的时间； CC列即原来的浓度； time列是time0加上一段时间间隔，表示采样点距离第一次给药的时间；</p>
+<section id="自定义函数poppk_initial" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数poppk_initial">1.1自定义函数poppk_initial</h2>
+<p>定义了poppk_initial函数，这个函数的作用是将短数据格式的浓度-时间数据转化为长数据格式。参数有：</p>
+<ol type="1">
+<li><p>data：数据框（短数据格式），一列id，其余是各个protocol时间的浓度；</p></li>
+<li><p>id：数据框id列的列名；</p></li>
+<li><p>hours：浓度采样时间距离治疗首次给药的时间间隔，以小时为单位；</p></li>
+<li><p>timeword：protocol时间列名中混杂的字符，如上述的”h”；</p></li>
+<li><p>idword：id列中混杂的字符，如上述的”RFP”；</p></li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>poppk_initial <span class="ot">&lt;-</span> <span class="cf">function</span>(data,id,hours,timeword,idword){</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(reshape2)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">melt</span>(data,<span class="at">id=</span>id)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(data) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"id"</span>,<span class="st">"time0"</span>,<span class="st">"CC"</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>time0 <span class="ot">&lt;-</span> <span class="fu">gsub</span>(timeword,<span class="st">""</span>,data<span class="sc">$</span>time0)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>time0 <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(data<span class="sc">$</span>time0)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>time <span class="ot">&lt;-</span> data<span class="sc">$</span>time0 <span class="sc">+</span> hours</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>id <span class="ot">&lt;-</span> <span class="fu">gsub</span>(idword,<span class="st">""</span>,data<span class="sc">$</span>id)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>id <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(data<span class="sc">$</span>id)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>id <span class="ot">&lt;-</span> <span class="fu">factor</span>(data<span class="sc">$</span>id)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(data)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数poppk_profile" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数poppk_profile">1.2自定义函数poppk_profile</h2>
+<p>当用poppk_initial获得处理后的长数据格式数据框，即可进一步描述性作图。建立新函数poppk_profile，参数包括：</p>
+<ol type="1">
+<li><p>data：数据框（长数据格式）；</p></li>
+<li><p>title_word：图表标题；</p></li>
+<li><p>其余散点设置如字面意思所示，有默认值，可不填；</p></li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>poppk_profile <span class="ot">&lt;-</span> <span class="cf">function</span>(data,</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                          title_word,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">point_shape=</span><span class="dv">1</span>,<span class="at">point_size=</span><span class="dv">1</span>,<span class="at">point_alpha=</span><span class="dv">1</span>){</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  xlus <span class="ot">&lt;-</span> <span class="fu">lus</span>(data<span class="sc">$</span>time0,<span class="at">intv =</span> <span class="dv">6</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  ylus <span class="ot">&lt;-</span> <span class="fu">lus</span>(data<span class="sc">$</span>CC,<span class="at">intv =</span> <span class="dv">6</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(ggplot2)</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  profi <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data,<span class="fu">aes</span>(time0,CC,<span class="at">group=</span>id,<span class="at">color=</span>id))<span class="sc">+</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">linewidth=</span><span class="fl">0.5</span>,<span class="at">alpha=</span><span class="fl">0.5</span>)<span class="sc">+</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">shape=</span>point_shape,<span class="at">size=</span>point_size,<span class="at">alpha =</span> point_size)<span class="sc">+</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(ylus[<span class="dv">1</span>], ylus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(ylus[<span class="dv">1</span>], ylus[<span class="dv">2</span>], ylus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(xlus[<span class="dv">1</span>], xlus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(xlus[<span class="dv">1</span>], xlus[<span class="dv">2</span>], xlus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    sgtheme0<span class="sc">+</span><span class="fu">theme</span>(<span class="at">aspect.ratio =</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">1.2</span>)<span class="sc">+</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x=</span><span class="st">"Time after last dose (h)"</span>,<span class="at">y=</span><span class="st">"Concentration (mg/L)"</span>,<span class="at">title =</span> title_word)</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(profi)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数poppk_unini" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数poppk_unini">1.4自定义函数poppk_unini</h2>
+<p>这个函数是poppk_initial的逆过程，即将数据框从长数据格式转换为短数据格式</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>poppk_unini <span class="ot">&lt;-</span> <span class="cf">function</span>(data){</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(reshape2)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> data[,<span class="fu">c</span>(<span class="st">"id"</span>,<span class="st">"time0"</span>,<span class="st">"CC"</span>)]</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>time0 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(<span class="fu">round</span>(data<span class="sc">$</span>time0,<span class="dv">0</span>)) <span class="co">#保险步骤，防止存在浮点数</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>time0 <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"c"</span>,data<span class="sc">$</span>time0)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">dcast</span>(data,id<span class="sc">~</span>time0,<span class="at">value.var =</span><span class="st">"CC"</span> )</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> data[<span class="fu">order</span>(data<span class="sc">$</span>id),]</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(data)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="在长数据中匹配协变量" class="level2">
+<h2 class="anchored" data-anchor-id="在长数据中匹配协变量">1.5在长数据中匹配协变量</h2>
+<p>仅有浓度、时间、id的数据不足以支持协变量分析。可以使用merge：</p>
+<ol type="1">
+<li><p>data_conc：长数据格式的浓度-时间-id数据；</p></li>
+<li><p>data_cov：按照id组织的协变量数据，每个id具有唯一一行；</p></li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#merge(data_conc,data_cov, by = "id", all.x = TRUE)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="示例" class="level2">
+<h2 class="anchored" data-anchor-id="示例">1.6示例</h2>
+<p>导入工作目录下的example_conc.xlsx，转化为长数据，并匹配协变量，并描述性作图：</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>example_conc <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"example_conc.xlsx"</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(example_conc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 11
+  `ABR-ID`     c0    c1    c2    c4    c6    c8   c10   c12   c16    c24
+  &lt;chr&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+1 ABR_1    0.416  17.7  18.2  11.8   8.91  6.15  4.63  3.25 1.62  0.402 
+2 ABR_2    0.0916 10.1   9.64  6.44  4.00  2.84  1.85  1.23 0.513 0.0886
+3 ABR_3    2.74   17.3  16.9  14.3  12.3  10.3   9.25  7.62 5.38  2.88  
+4 ABR_4    0.956   9.68 10.2   8.76  6.62  5.77  4.59  3.60 2.33  0.945 
+5 ABR_5    0.867   9.01 10.4   8.62  6.82  5.31  4.60  3.41 2.14  0.889 
+6 ABR_6    1.38   11.7  12.9  10.5   8.31  6.86  6.02  4.40 3.07  1.38  </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#假设示例数据采集自治疗第14天，因此hours=312</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>example_conc <span class="ot">&lt;-</span> <span class="fu">poppk_initial</span>(example_conc,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">id =</span> <span class="fu">names</span>(example_conc)[<span class="dv">1</span>],</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>                              <span class="at">hours =</span> <span class="dv">312</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>                              <span class="at">timeword =</span> <span class="st">"c"</span>,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>                              <span class="at">idword =</span> <span class="st">"ABR_"</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(example_conc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  id time0         CC time
+1  1     0 0.41605874  312
+2  2     0 0.09155238  312
+3  3     0 2.74066892  312
+4  4     0 0.95612331  312
+5  5     0 0.86696204  312
+6  6     0 1.37999804  312</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#接下来为长数据格式数据框匹配协变量</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>example_cov <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"example_cov.xlsx"</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(example_cov)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 4
+     id   sex   age   wgt
+  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1     1     0    42  75.5
+2     2     0    45  56.5
+3     3     1    42  52.3
+4     4     0    46  57.9
+5     5     0    36  64.4
+6     6     0    45  73.8</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>example_conc <span class="ot">&lt;-</span> <span class="fu">merge</span>(example_conc,example_cov, <span class="at">by =</span> <span class="st">"id"</span>, <span class="at">all.x =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(example_conc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  id time0         CC time sex age  wgt
+1  1     0  0.4160587  312   0  42 75.5
+2  1     4 11.8079822  316   0  42 75.5
+3  1    12  3.2535626  324   0  42 75.5
+4  1     8  6.1465662  320   0  42 75.5
+5  1    16  1.6156314  328   0  42 75.5
+6  1    24  0.4019182  336   0  42 75.5</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">#测试一下将长数据格式转回短数据格式，此时协变量数据也会丢失</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>example_conc2 <span class="ot">&lt;-</span> <span class="fu">poppk_unini</span>(example_conc)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(example_conc2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  id         c0        c1      c10      c12       c16        c2        c24
+1  1 0.41605874 17.735973 4.632888 3.253563 1.6156314 18.194528 0.40191820
+2  2 0.09155238 10.074321 1.847301 1.228712 0.5134632  9.640159 0.08855422
+3  3 2.74066892 17.263403 9.245598 7.615661 5.3757969 16.871231 2.87549953
+4  4 0.95612331  9.675802 4.587828 3.599350 2.3344852 10.206424 0.94500674
+5  5 0.86696204  9.007820 4.596061 3.414644 2.1394740 10.369615 0.88931150
+6  6 1.37999804 11.724099 6.021056 4.396951 3.0718515 12.907642 1.37977694
+         c4        c6        c8
+1 11.807982  8.906536  6.146566
+2  6.440746  3.999703  2.839105
+3 14.295843 12.286614 10.310782
+4  8.755439  6.623871  5.767438
+5  8.615051  6.819609  5.312783
+6 10.480176  8.311359  6.864189</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">#对长数据格式进行描述性作图</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">poppk_profile</span>(<span class="at">data =</span> example_conc,<span class="at">title_word =</span> <span class="st">"Example"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="群体药代动力学工具2023_0609_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="拟合优度图" class="level1">
+<h1>2.拟合优度图</h1>
+<p>如果你和我一样比较注重图片品质和风格的统一，那么你可能也不太喜欢phoenix软件自动输出的图片。那么我们就可以使用phoenix产生的数据表，提取其中的数据，重置图片如拟合优度图，视觉预测检验图。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87/010.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">phoenix 默认风格图片</figcaption><p></p>
+</figure>
+</div>
+<p>本章拟合优度图要用到的表格是Residuals，右键导出：</p>
+<p><img src="%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87/004.jpg" class="img-fluid"></p>
+<section id="自定义函数goodness_predict" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数goodness_predict">2.1自定义函数goodness_predict</h2>
+<p>goodness_predict函数用来生成（观测浓度相关的）拟合优度图，包括观测浓度VS个体预测值图，观测浓度VS群体预测值图。参数有：</p>
+<ol type="1">
+<li><p>data_residual：从phoenix NLME导出的Residuals数据框；</p></li>
+<li><p>indiv：逻辑值，如为T则绘制个体预测值图，如为F则绘制群体预测值图；</p></li>
+<li><p>title_word：图标题</p></li>
+<li><p>其余还有point_shape，point_size，point_alpha等带有默认值的参数，同字面意思，可不填。</p></li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>goodness_predict <span class="ot">&lt;-</span> <span class="cf">function</span>(data_residual,</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>                             indiv,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>                             title_word,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>                             <span class="at">point_shape=</span><span class="dv">1</span>,<span class="at">point_size=</span><span class="dv">2</span>,<span class="at">point_alpha=</span><span class="dv">1</span>){</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  xylus <span class="ot">&lt;-</span> <span class="fu">lus</span>(<span class="at">vec =</span> <span class="fu">c</span>(data_residual<span class="sc">$</span>DV,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">if</span> (indiv) </span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>                         {data_residual<span class="sc">$</span>IPRED} </span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>                       <span class="cf">else</span> </span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>                         {data_residual<span class="sc">$</span>PRED}),<span class="at">intv =</span> <span class="dv">5</span>)</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(ggplot2)</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  pgood <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data_residual,</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">aes</span>(</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> (indiv) </span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>                    {IPRED} </span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">else</span> </span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>                    {PRED},DV))<span class="sc">+</span></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size=</span>point_size,<span class="at">alpha=</span>point_alpha,<span class="at">shape=</span>point_shape)<span class="sc">+</span></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>,<span class="at">linewidth =</span> <span class="fl">0.5</span>)<span class="sc">+</span></span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(xylus[<span class="dv">1</span>], xylus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(xylus[<span class="dv">1</span>], xylus[<span class="dv">2</span>], xylus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(xylus[<span class="dv">1</span>], xylus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(xylus[<span class="dv">1</span>], xylus[<span class="dv">2</span>], xylus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>    sgtheme0<span class="sc">+</span><span class="fu">theme</span>(<span class="at">aspect.ratio =</span> <span class="dv">1</span><span class="sc">/</span><span class="dv">1</span>)<span class="sc">+</span></span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x=</span><span class="fu">ifelse</span>(indiv,</span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"Individual predicted concentration (mg/L)"</span>,</span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"Population predicted concentration (mg/L)"</span>),</span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>         <span class="at">y=</span><span class="st">"Observed concentration (mg/L)"</span>,</span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> title_word)</span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(pgood)</span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数goodness_cwres" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数goodness_cwres">2.2自定义函数goodness_cwres</h2>
+<p>goodness_cwres函数用来生成条件加权残差的散点图，参数有：</p>
+<ol type="1">
+<li><p>data_residual：从phoenix NLME导出的Residuals数据框；</p></li>
+<li><p>pred：逻辑值，如为T则绘制群体预测值图，如为F则绘制末次给药时间图；</p></li>
+<li><p>title_word：图标题</p></li>
+<li><p>yrange：可指定的CWRES范围，默认值为2</p></li>
+<li><p>其余还有point_shape，point_size，point_alpha等带有默认值的参数，同字面意思，可不填。</p>
+<p>注：如需要拟合线，将代码中被注释的3行取消注释即可</p></li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>goodness_cwres <span class="ot">&lt;-</span> <span class="cf">function</span>(data_residual,</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>                           pred,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>                           title_word,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">yrange =</span> <span class="dv">2</span>,<span class="at">point_shape=</span><span class="dv">1</span>,<span class="at">point_size=</span><span class="dv">2</span>,<span class="at">point_alpha=</span><span class="dv">1</span>){</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  xlus <span class="ot">&lt;-</span> <span class="fu">lus</span>(<span class="cf">if</span> (pred)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    {data_residual<span class="sc">$</span>PRED}</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> </span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>      {data_residual<span class="sc">$</span>TAD},<span class="at">intv =</span> <span class="dv">5</span>)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  ylus <span class="ot">&lt;-</span> <span class="fu">lus</span>(data_residual<span class="sc">$</span>CWRES,<span class="at">intv =</span> <span class="dv">5</span>)</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(ggplot2)</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  pgood <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data_residual,</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">aes</span>(<span class="cf">if</span> (pred) {</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>                    PRED</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>                  } <span class="cf">else</span> {</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>                    TAD</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>                  },CWRES))<span class="sc">+</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size=</span>point_size,<span class="at">alpha=</span>point_alpha,<span class="at">shape=</span>point_shape)<span class="sc">+</span></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">0</span>, <span class="at">intercept =</span> <span class="dv">0</span>,<span class="at">linewidth =</span> <span class="dv">1</span>)<span class="sc">+</span></span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> yrange,<span class="at">linetype =</span> <span class="st">"dashed"</span>)<span class="sc">+</span></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="sc">-</span>yrange,<span class="at">linetype =</span> <span class="st">"dashed"</span>)<span class="sc">+</span></span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">#geom_smooth(se = F,color = "blue")+</span></span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">#geom_smooth(data = data_residual,aes(TAD,abs(CWRES)),se = F,color = "red")+</span></span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">#geom_smooth(data = data_residual,aes(TAD,-abs(CWRES)),se = F,color = "red")+</span></span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(ylus[<span class="dv">1</span>], ylus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(ylus[<span class="dv">1</span>], ylus[<span class="dv">2</span>], ylus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(xlus[<span class="dv">1</span>], xlus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(xlus[<span class="dv">1</span>], xlus[<span class="dv">2</span>], xlus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>    sgtheme0<span class="sc">+</span><span class="fu">theme</span>(<span class="at">aspect.ratio =</span> <span class="dv">1</span><span class="sc">/</span><span class="dv">1</span>)<span class="sc">+</span></span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x=</span><span class="fu">ifelse</span>(pred,</span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"Population predicted concentration (mg/L)"</span>,</span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"Time after last dose (h)"</span>),</span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a>         <span class="at">y=</span><span class="st">"Conditional weighted residual"</span>,</span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> title_word)</span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(pgood)</span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="示例-1" class="level2">
+<h2 class="anchored" data-anchor-id="示例-1">2.3示例</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">#导入数据</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>example_Residuals <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"example_Residuals.xlsx"</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(example_Residuals)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 18
+  Scenario    id  IVAR   TAD   PRED  IPRED     DV    IRES PREDSE Weight  IWRES
+  &lt;lgl&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;lgl&gt;   &lt;dbl&gt;  &lt;dbl&gt;
+1 NA           1   312     0  0.275  0.359  0.416  0.0572 NA          1  0.227
+2 NA           1   313     1 13.9   17.9   17.7   -0.153  NA          1 -0.606
+3 NA           1   314     2 13.8   17.5   18.2    0.654  NA          1  2.59 
+4 NA           1   316     4  9.96  12.7   11.8   -0.844  NA          1 -3.35 
+5 NA           1   318     6  6.96   8.87   8.91   0.0395 NA          1  0.157
+6 NA           1   320     8  4.86   6.21   6.15  -0.0626 NA          1 -0.248
+# … with 7 more variables: WRES &lt;dbl&gt;, CWRES &lt;dbl&gt;, CdfDV &lt;dbl&gt;, TADSeq &lt;dbl&gt;,
+#   ObsName &lt;chr&gt;, ResetSeq &lt;dbl&gt;, `Var. Inf. factor` &lt;lgl&gt;</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#作拟合优度图（与实测浓度相关）</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(<span class="fu">goodness_predict</span>(example_Residuals,<span class="at">indiv =</span> T, <span class="at">title_word =</span> <span class="st">"Goodness-of-fit plot"</span>),</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>             <span class="fu">goodness_predict</span>(example_Residuals,<span class="at">indiv =</span> F, <span class="at">title_word =</span> <span class="st">"Goodness-of-fit plot"</span>),</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">nrow =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="群体药代动力学工具2023_0609_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(<span class="fu">goodness_cwres</span>(example_Residuals,<span class="at">pred =</span> T, <span class="at">title_word =</span> <span class="st">"Goodness-of-fit plot"</span>),</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>             <span class="fu">goodness_cwres</span>(example_Residuals,<span class="at">pred =</span> F, <span class="at">title_word =</span> <span class="st">"Goodness-of-fit plot"</span>),</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">nrow =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="群体药代动力学工具2023_0609_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="视觉预测检验图" class="level1">
+<h1>3.视觉预测检验图</h1>
+<p>导出vpc数据文件：</p>
+<p><img src="%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87/005.jpg" class="img-fluid"></p>
+<section id="自定义函数vpc_rebuild" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数vpc_rebuild">3.1自定义函数vpc_rebuild</h2>
+<p>导出的VPC数据框需要处理成适合ggplot作图的格式，包含VPC作图需要的观测值折线、区间等。定义vpc_rebuild函数，参数有：</p>
+<p>vpc_data：从phoenix导出储存VPC图信息的PredCheck_ObsQ_SimQCI数据框</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>vpc_rebuild <span class="ot">&lt;-</span> <span class="cf">function</span>(vpc_data){</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">#抽取观察值的百分位数</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  vpc_obs <span class="ot">&lt;-</span> vpc_data[<span class="sc">!</span><span class="fu">is.na</span>(vpc_data<span class="sc">$</span>DV0),]</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">#抽取区间模拟的上限、下限和中位数</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  vpc_05 <span class="ot">&lt;-</span> vpc_data[vpc_data<span class="sc">$</span>QE <span class="sc">==</span> <span class="st">"05%"</span>,]</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  vpc_50 <span class="ot">&lt;-</span> vpc_data[vpc_data<span class="sc">$</span>QE <span class="sc">==</span> <span class="st">"50%"</span>,]</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  vpc_95 <span class="ot">&lt;-</span> vpc_data[vpc_data<span class="sc">$</span>QE <span class="sc">==</span> <span class="st">"95%"</span>,]</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">#汇总</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  rebuilt <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">time =</span> vpc_obs<span class="sc">$</span>IVAR, <span class="at">cc =</span> vpc_obs<span class="sc">$</span>DV0, <span class="at">per =</span> vpc_obs<span class="sc">$</span>QI,</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>                        <span class="at">ymin =</span> vpc_05<span class="sc">$</span>DV, <span class="at">yy =</span> vpc_50<span class="sc">$</span>DV, <span class="at">ymax =</span> vpc_95<span class="sc">$</span>DV)</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="fu">return</span>(rebuilt)</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数vpc_plot" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数vpc_plot">3.2自定义函数vpc_plot</h2>
+<p>根据vpc_rebuild的结果，生成VPC图，参数有：</p>
+<ol type="1">
+<li><p>data_CI：用于生成模拟区间的数据，一般是vpc_rebuild(PredCheck_ObsQ_SimQCI)</p></li>
+<li><p>data_obs：用于生成观测值实际百分位数的数据，一般同上</p></li>
+<li><p>data_points：用于生成蓝色散点，是第一部分的浓度-时间数据</p></li>
+<li><p>hours：浓度采样时间距离治疗首次给药的时间间隔，以小时为单位；</p></li>
+<li><p>title_word：标题字符</p></li>
+<li><p>其余还有point_shape，point_size，point_alpha等带有默认值的参数，同字面意思，可不填。</p>
+<p>注：函数中将生成模拟区间的数据和用于生成观测值的数据分离开了，但一般情况下这两个参数使用的是同一个数据。</p></li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>vpc_plot <span class="ot">&lt;-</span> <span class="cf">function</span>(data_CI,</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>                     data_obs,</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>                     data_points,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>                     hours,</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>                     title_word,</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">point_shape=</span><span class="dv">1</span>,<span class="at">point_size=</span><span class="dv">1</span>,<span class="at">point_alpha=</span><span class="dv">1</span>){</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  data_CI<span class="sc">$</span>time0 <span class="ot">&lt;-</span> data_CI<span class="sc">$</span>time<span class="sc">-</span>hours</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  data_obs<span class="sc">$</span>time0 <span class="ot">&lt;-</span> data_obs<span class="sc">$</span>time<span class="sc">-</span>hours</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>  data_points<span class="sc">$</span>time0 <span class="ot">&lt;-</span> data_points<span class="sc">$</span>time<span class="sc">-</span>hours</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>  xlus <span class="ot">&lt;-</span> <span class="fu">lus</span>(data_CI<span class="sc">$</span>time0,<span class="at">intv =</span> <span class="dv">6</span>)</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>  ylus <span class="ot">&lt;-</span> <span class="fu">lus</span>(<span class="fu">c</span>(data_CI<span class="sc">$</span>ymin,data_CI<span class="sc">$</span>ymax,data_points<span class="sc">$</span>CC),<span class="at">intv =</span> <span class="dv">6</span>)</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(ggplot2)</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>  pvpc <span class="ot">&lt;-</span> <span class="fu">ggplot</span>()<span class="sc">+</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_ribbon</span>(<span class="at">data =</span> data_CI,<span class="fu">aes</span>(<span class="at">x=</span>time0,<span class="at">y=</span>yy, <span class="at">group=</span>per,<span class="at">ymin=</span>ymin,<span class="at">ymax=</span>ymax,</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">fill=</span>per),<span class="at">alpha=</span><span class="dv">1</span>,<span class="at">show.legend =</span> F)<span class="sc">+</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#d6ebf2"</span>,<span class="st">"#ffe9e7"</span>,<span class="st">"#d6ebf2"</span>))<span class="sc">+</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> data_points, <span class="fu">aes</span>(<span class="at">x=</span>time0,<span class="at">y=</span>CC), <span class="at">color=</span><span class="st">"blue"</span>, </span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">shape=</span>point_shape,<span class="at">size=</span>point_size,<span class="at">alpha =</span> point_size)<span class="sc">+</span></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> data_CI,<span class="fu">aes</span>(<span class="at">x=</span>time0, <span class="at">y=</span>yy, <span class="at">group=</span>per),<span class="at">linewidth=</span><span class="fl">0.5</span>, <span class="at">color=</span><span class="st">"black"</span>,<span class="at">linetype=</span><span class="st">"dashed"</span>)<span class="sc">+</span></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> data_obs,<span class="fu">aes</span>(<span class="at">x=</span>time0, <span class="at">y=</span>cc, <span class="at">group=</span>per),<span class="at">linewidth=</span><span class="fl">0.5</span>, <span class="at">color=</span><span class="st">"red"</span>)<span class="sc">+</span></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(ylus[<span class="dv">1</span>], ylus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(ylus[<span class="dv">1</span>], ylus[<span class="dv">2</span>], ylus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(xlus[<span class="dv">1</span>], xlus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(xlus[<span class="dv">1</span>], xlus[<span class="dv">2</span>], xlus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>    sgtheme0<span class="sc">+</span><span class="fu">theme</span>(<span class="at">aspect.ratio =</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">1.2</span>)<span class="sc">+</span></span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x=</span><span class="st">"Time after last dose (h)"</span>,<span class="at">y=</span><span class="st">"Concentration (mg/L)"</span>,<span class="at">title =</span> title_word)</span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(pvpc)</span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="示例-2" class="level2">
+<h2 class="anchored" data-anchor-id="示例-2">3.3示例</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">#导入数据</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>example_PredCheck_ObsQ_SimQCI <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"example_PredCheck_ObsQ_SimQCI.xlsx"</span>)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(example_PredCheck_ObsQ_SimQCI)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 12
+  Scena…¹ Strat1 Strat2 Strat3 Bin_Min  IVAR Bin_Max     DV0    DV ObsName QI   
+  &lt;lgl&gt;    &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;
+1 NA           0      0      0     312   312     312 2.96e-6    NA CObs    05%  
+2 NA           0      0      0     313   313     313 6.30e+0    NA CObs    05%  
+3 NA           0      0      0     314   314     314 6.59e+0    NA CObs    05%  
+4 NA           0      0      0     316   316     316 2.95e+0    NA CObs    05%  
+5 NA           0      0      0     318   318     318 7.89e-1    NA CObs    05%  
+6 NA           0      0      0     320   320     320 1.87e-1    NA CObs    05%  
+# … with 1 more variable: QE &lt;chr&gt;, and abbreviated variable name ¹​Scenario</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">#处理数据集</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>example_vpc <span class="ot">&lt;-</span> <span class="fu">vpc_rebuild</span>(example_PredCheck_ObsQ_SimQCI)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(example_vpc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  time           cc per        ymin         yy       ymax
+1  312 2.959701e-06 05% -0.40166984 -0.2934505 -0.1749781
+2  313 6.296698e+00 05%  6.43619020  7.5044485  8.5181934
+3  314 6.589980e+00 05%  6.12678906  7.2959881  8.2809839
+4  316 2.952892e+00 05%  2.39137176  3.6676613  4.8162193
+5  318 7.887191e-01 05%  0.54188615  1.2602723  2.1432957
+6  320 1.866370e-01 05%  0.01269934  0.4117271  0.8459447</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">#VPC作图</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">vpc_plot</span>(example_vpc,example_vpc,example_conc,<span class="at">hours =</span> <span class="dv">312</span>,<span class="at">title_word =</span> <span class="st">"Visual predictive check"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="群体药代动力学工具2023_0609_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="pk参数" class="level1">
+<h1>4.PK参数</h1>
+<p>我们希望从模型中导出一些参数来表征受试者的药物暴露，这些参数通常是AUC，Cmax，Cmin，T&gt;MIC，这需要使用phoenix的自定义报表导出。首先，将目标模型切换到代码编辑模式，添加一行内容为：deriv(AUC=C)</p>
+<p><img src="%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87/006.jpg" class="img-fluid"></p>
+<p>然后将迭代次数设置为0，添加table：</p>
+<p><img src="%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87/007.jpg" class="img-fluid"></p>
+<p>如果导出预测浓度的表格，则按如下设置：（基于浓度生成的参数的准确性取决于你导出的时间间隔，如果间隔过大则必然导致参数不准确）</p>
+<p><img src="%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87/008.jpg" class="img-fluid"></p>
+<section id="自定义函数pk_auc" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数pk_auc">4.1自定义函数pk_auc</h2>
+<p>首先我们需要将从phoenix导出的自定义报表中提取出AUC，默认按该组id升序排列，参数为data：报表Table01</p>
+<p>注：AUC其实未必需要通过添加deriv(AUC=C)语句后导出，你可以根据导出的C（时间间隔为0.1），用累积条形法代替积分获得AUC，这两种方法得出的AUC具有高度一致性（如果你接受这点误差的话）。</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>pk_auc <span class="ot">&lt;-</span> <span class="cf">function</span>(data){</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(reshape2)</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> data[,<span class="fu">c</span>(<span class="st">"id"</span>,<span class="st">"time"</span>,<span class="st">"AUC"</span>)]</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>time <span class="ot">&lt;-</span> <span class="fu">as.character</span>(<span class="fu">round</span>(data<span class="sc">$</span>time,<span class="dv">0</span>)) <span class="co">#保险步骤，防止生成浮点数</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">dcast</span>(data,id<span class="sc">~</span>time,<span class="at">value.var =</span> <span class="st">"AUC"</span>)</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  AUC <span class="ot">&lt;-</span> <span class="fu">abs</span>(data[,<span class="dv">2</span>]<span class="sc">-</span>data[,<span class="dv">3</span>])</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(AUC)</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数pk_cmax-pk_cmin" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数pk_cmax-pk_cmin">4.2自定义函数pk_cmax, pk_cmin</h2>
+<p>本函数可以输出你导出时间区间内的个体浓度的最大值或最小值。</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>pk_cmax <span class="ot">&lt;-</span> <span class="cf">function</span>(data){</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(reshape2)</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> data[,<span class="fu">c</span>(<span class="st">"id"</span>,<span class="st">"time"</span>,<span class="st">"C"</span>)]</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">dcast</span>(data,id<span class="sc">~</span>time,<span class="at">value.var =</span> <span class="st">"C"</span>)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  Cmax <span class="ot">&lt;-</span> <span class="fu">apply</span>(data[,<span class="sc">-</span><span class="dv">1</span>],<span class="dv">1</span>,max)</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(Cmax)</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>pk_cmin <span class="ot">&lt;-</span> <span class="cf">function</span>(data){</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(reshape2)</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> data[,<span class="fu">c</span>(<span class="st">"id"</span>,<span class="st">"time"</span>,<span class="st">"C"</span>)]</span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">dcast</span>(data,id<span class="sc">~</span>time,<span class="at">value.var =</span> <span class="st">"C"</span>)</span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>  Cmin <span class="ot">&lt;-</span> <span class="fu">apply</span>(data[,<span class="sc">-</span><span class="dv">1</span>],<span class="dv">1</span>,min)</span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(Cmin)</span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数pk_tmic" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数pk_tmic">4.3自定义函数pk_tmic</h2>
+<p>本函数可以输出受试者的浓度大于MIC水平的维持时间，适用于一些对作用时间敏感的药物。参数有：</p>
+<p>data：由phoenix导出的浓度报表Table01</p>
+<p>mic：特定药物的MIC水平</p>
+<p>skip：输出浓度的时间间隔，示例中用的是0.1，改参数决定了精度。</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>pk_tmic <span class="ot">&lt;-</span> <span class="cf">function</span>(data,mic,skip){</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  tmic <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(<span class="fu">table</span>(data[data<span class="sc">$</span>C<span class="sc">&gt;</span>mic,]<span class="sc">$</span>id))<span class="sc">*</span>skip</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(tmic)</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="示例-3" class="level2">
+<h2 class="anchored" data-anchor-id="示例-3">4.4示例</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co">#生成AUC</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>examp_AUC_Table01 <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"examp_AUC_Table01.xlsx"</span>)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">pk_auc</span>(examp_AUC_Table01))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 129.69401  62.68937 204.47272 106.37991 103.07061 132.73341</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co">#生成Cmax</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>examp_C_Table01 <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"examp_C_Table01.xlsx"</span>)</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">pk_cmax</span>(examp_C_Table01))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 18.39985 10.28223 17.37245 10.35271 10.18470 12.68298</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co">#生成Cmin</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">pk_cmin</span>(examp_C_Table01))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.35888052 0.08693706 2.82047932 1.00029567 0.89331183 1.30868389</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co">#生成T&gt;MIC</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(<span class="fu">pk_tmic</span>(examp_C_Table01,<span class="at">mic =</span> <span class="dv">2</span>,<span class="at">skip =</span> <span class="fl">0.1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 14.3  9.4 24.1 17.5 16.8 19.9</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="有限采样策略-多重线性回归法" class="level1">
+<h1>5.有限采样策略-多重线性回归法</h1>
+<section id="自定义函数lss_multi" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数lss_multi">5.1自定义函数lss_multi</h2>
+<p>假设我们已经确定了要检测哪些有限采样策略方案：</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>lss_list <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">0</span>),</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">6</span>),</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>),</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">6</span>),</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">2</span>),</span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">2</span>,<span class="dv">6</span>)</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>lss_multi函数用来根据上述lss_list里的各种方案形成AUC数据集，以方便进一步计算误差系数，参数有：</p>
+<ol type="1">
+<li><p>data_table：导出的Table01报表；</p></li>
+<li><p>data_conc：储存浓度-时间数据的表；</p></li>
+<li><p>lss_list：需要测试的优先采样策略方案；</p></li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>lss_multi <span class="ot">&lt;-</span> <span class="cf">function</span>(data_table,</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>                      data_conc,</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>                      lss_list){</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  data_merge <span class="ot">&lt;-</span> <span class="fu">poppk_unini</span>(data_conc)</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>  data_merge<span class="sc">$</span>AUCfull <span class="ot">&lt;-</span> <span class="fu">pk_auc</span>(data_table)</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>  data_result <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">AUCfull=</span>data_merge<span class="sc">$</span>AUCfull)</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (vec0 <span class="cf">in</span> lss_list){</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>    vec <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"c"</span>,vec0)</span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>    data_sub <span class="ot">&lt;-</span> data_merge[,<span class="fu">c</span>(<span class="st">"AUCfull"</span>,vec)]</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>    model <span class="ot">&lt;-</span> <span class="fu">lm</span>(AUCfull <span class="sc">~</span>., <span class="at">data =</span> data_sub)</span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>    data_lss <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">predict.lm</span>(model))</span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">colnames</span>(data_lss) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"AUC"</span>,<span class="fu">paste</span>(vec0,<span class="at">collapse =</span> <span class="st">"_"</span>))</span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>    data_result <span class="ot">&lt;-</span> <span class="fu">cbind</span>(data_result,data_lss)</span>
+<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">#print(paste0(paste(vec,collapse = "_"),"done"))</span></span>
+<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a><span class="fu">return</span>(data_result)</span>
+<span id="cb49-20"><a href="#cb49-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-21"><a href="#cb49-21" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数lss_formula" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数lss_formula">5.2自定义函数lss_formula</h2>
+<p>lss_formula函数和lss_multi函数具有相同的输入参数，但本函数的目的是作为一个数据框输出一系列线性回归的公式。</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>lss_formula <span class="ot">&lt;-</span> <span class="cf">function</span>(data_table,</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>                        data_conc,</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>                        lss_list){</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  data_merge <span class="ot">&lt;-</span> <span class="fu">poppk_unini</span>(data_conc)</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>  data_merge<span class="sc">$</span>AUCfull <span class="ot">&lt;-</span> <span class="fu">pk_auc</span>(data_table)</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>  data_result <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (vec0 <span class="cf">in</span> lss_list){</span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>    vec <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"c"</span>,vec0)</span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a>    data_sub <span class="ot">&lt;-</span> data_merge[,<span class="fu">c</span>(<span class="st">"AUCfull"</span>,vec)]</span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a>    model <span class="ot">&lt;-</span> <span class="fu">lm</span>(AUCfull <span class="sc">~</span>., <span class="at">data =</span> data_sub)</span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a>    model_coef <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">coef</span>(model))</span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a>    model_coef<span class="sc">$</span>x <span class="ot">&lt;-</span> <span class="fu">rownames</span>(model_coef)</span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a>    model_coef<span class="sc">$</span>x[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="st">""</span></span>
+<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a>    model_coef<span class="sc">$</span>coef2 <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">"%.1f"</span>, <span class="fu">round</span>(model_coef<span class="sc">$</span>coef.model.,<span class="dv">1</span>))</span>
+<span id="cb50-16"><a href="#cb50-16" aria-hidden="true" tabindex="-1"></a>    model_coef<span class="sc">$</span>kx <span class="ot">&lt;-</span> <span class="fu">paste</span>(model_coef<span class="sc">$</span>coef2,model_coef<span class="sc">$</span>x,<span class="at">sep =</span> <span class="st">"×"</span>)</span>
+<span id="cb50-17"><a href="#cb50-17" aria-hidden="true" tabindex="-1"></a>    formula <span class="ot">&lt;-</span> <span class="fu">paste</span>(model_coef<span class="sc">$</span>kx,<span class="at">collapse =</span> <span class="st">"+"</span>)</span>
+<span id="cb50-18"><a href="#cb50-18" aria-hidden="true" tabindex="-1"></a>    formula <span class="ot">&lt;-</span><span class="fu">gsub</span>(<span class="st">"×</span><span class="sc">\\</span><span class="st">+"</span>, <span class="st">"+"</span>, formula)</span>
+<span id="cb50-19"><a href="#cb50-19" aria-hidden="true" tabindex="-1"></a>    formula <span class="ot">&lt;-</span><span class="fu">gsub</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">+-"</span>, <span class="st">"-"</span>, formula)</span>
+<span id="cb50-20"><a href="#cb50-20" aria-hidden="true" tabindex="-1"></a>    formula <span class="ot">&lt;-</span><span class="fu">gsub</span>(<span class="st">"c"</span>, <span class="st">"C"</span>, formula)</span>
+<span id="cb50-21"><a href="#cb50-21" aria-hidden="true" tabindex="-1"></a>    formula <span class="ot">&lt;-</span><span class="fu">paste0</span>(<span class="st">"AUC0-24h="</span>,formula)</span>
+<span id="cb50-22"><a href="#cb50-22" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb50-23"><a href="#cb50-23" aria-hidden="true" tabindex="-1"></a>    data_delta <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">strtg=</span><span class="fu">paste</span>(vec0,<span class="at">collapse =</span> <span class="st">","</span>),<span class="at">fml=</span>formula)</span>
+<span id="cb50-24"><a href="#cb50-24" aria-hidden="true" tabindex="-1"></a>    data_result <span class="ot">&lt;-</span> <span class="fu">rbind</span>(data_result,data_delta)</span>
+<span id="cb50-25"><a href="#cb50-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">#print(paste0(paste(vec,collapse = "_"),"done"))</span></span>
+<span id="cb50-26"><a href="#cb50-26" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb50-27"><a href="#cb50-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(data_result)</span>
+<span id="cb50-28"><a href="#cb50-28" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数mrr" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数mrr">5.3自定义函数MRR</h2>
+<p>MRR函数用来生成MPE, RMSE, R2三个指标，取其首字母而成，考虑了一下，还是不予省略小数了。参数有：</p>
+<ol type="1">
+<li><p>fullauc：参考AUC；</p></li>
+<li><p>lssauc：要检测的有限采样策略AUC；</p></li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>MRR <span class="ot">&lt;-</span> <span class="cf">function</span>(fullauc,lssauc){</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  mae <span class="ot">&lt;-</span> <span class="fu">abs</span>(fullauc<span class="sc">-</span>lssauc)<span class="sc">/</span>fullauc</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  mse <span class="ot">&lt;-</span> (fullauc<span class="sc">-</span>lssauc)<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  MPE <span class="ot">&lt;-</span> <span class="fu">sum</span>(mae)<span class="sc">/</span><span class="fu">length</span>(fullauc)<span class="sc">*</span><span class="dv">100</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>  RMSE <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">sum</span>(mse)<span class="sc">/</span>(<span class="fu">length</span>(fullauc)<span class="sc">-</span><span class="dv">1</span>))<span class="sc">/</span><span class="fu">mean</span>(fullauc)<span class="sc">*</span><span class="dv">100</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>  R2 <span class="ot">&lt;-</span> <span class="fu">cor</span>(fullauc,lssauc)<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#MPE &lt;- round(MPE,1)</span></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">#RMSE &lt;- round(RMSE,1)</span></span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">#R2 &lt;- round(R2,3)</span></span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">c</span>(<span class="at">MPE=</span>MPE,<span class="at">RMSE=</span>RMSE,<span class="at">R2=</span>R2))</span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数lss_accuracy" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数lss_accuracy">5.4自定义函数lss_accuracy</h2>
+<p>lss_accuracy用来生成前述定义的lss_list里的各种采样方案的MPE, RMSE, R2，并输出为数据框，其参数有：</p>
+<p>data_AUC：lss_multi函数生成的AUC数据集；</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>lss_accuracy <span class="ot">&lt;-</span> <span class="cf">function</span>(data_AUC){</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>  data_result <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>  names<span class="ot">&lt;-</span> <span class="fu">names</span>(data_AUC)</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>  names<span class="ot">&lt;-</span> names[<span class="sc">-</span><span class="fu">which</span>(names <span class="sc">==</span> <span class="st">"AUCfull"</span>)]</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (name <span class="cf">in</span> names){</span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>    data_delta <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">t</span>(</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">MRR</span>(<span class="at">fullauc =</span> data_AUC[[<span class="st">"AUCfull"</span>]],</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">lssauc =</span> data_AUC[[name]])))</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>    data_delta<span class="sc">$</span>strtg <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"_"</span>,<span class="st">","</span>,<span class="fu">gsub</span>(<span class="st">"AUC"</span>,<span class="st">""</span>,name))</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>    data_result <span class="ot">&lt;-</span> <span class="fu">rbind</span>(data_result,data_delta)</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">#print(paste0(name,"done"))</span></span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb52-15"><a href="#cb52-15" aria-hidden="true" tabindex="-1"></a>  data_result <span class="ot">&lt;-</span>data_result[,<span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>)]</span>
+<span id="cb52-16"><a href="#cb52-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(data_result)</span>
+<span id="cb52-17"><a href="#cb52-17" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="bland-altman-plot一致性评价" class="level2">
+<h2 class="anchored" data-anchor-id="bland-altman-plot一致性评价">5.5 Bland-Altman plot一致性评价</h2>
+<p>BAP函数用来生成Bland-Altman Plot，取其首字母作为函数名，其参数有：</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>BAP <span class="ot">&lt;-</span> <span class="cf">function</span>(fullauc,</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>                lssauc,</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>                title_word,</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">point_shape=</span><span class="dv">1</span>,<span class="at">point_size=</span><span class="dv">2</span>,<span class="at">point_alpha=</span><span class="dv">1</span>){</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>  BA <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(fullauc,lssauc)</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>  BA<span class="sc">$</span>diff <span class="ot">&lt;-</span> BA<span class="sc">$</span>fullauc <span class="sc">-</span> BA<span class="sc">$</span>lssauc</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>  mean_diff <span class="ot">&lt;-</span> <span class="fu">mean</span>(BA<span class="sc">$</span>diff)</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>  lower_diff <span class="ot">&lt;-</span> mean_diff <span class="sc">-</span> <span class="fl">1.96</span><span class="sc">*</span><span class="fu">sd</span>(BA<span class="sc">$</span>diff)</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>  upper_diff <span class="ot">&lt;-</span> mean_diff <span class="sc">+</span> <span class="fl">1.96</span><span class="sc">*</span><span class="fu">sd</span>(BA<span class="sc">$</span>diff)</span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>  xlus <span class="ot">&lt;-</span> <span class="fu">lus</span>(BA<span class="sc">$</span>fullauc)</span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>  ylus <span class="ot">&lt;-</span> <span class="fu">lus</span>(<span class="fu">c</span>(BA<span class="sc">$</span>diff,lower_diff,upper_diff))</span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(ggplot2)</span></span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a>  bap <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(BA, <span class="fu">aes</span>(<span class="at">x =</span> fullauc, <span class="at">y =</span> diff))<span class="sc">+</span></span>
+<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">shape=</span>point_shape,<span class="at">size=</span>point_size,<span class="at">alpha =</span> point_size)<span class="sc">+</span></span>
+<span id="cb53-16"><a href="#cb53-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> mean_diff, <span class="at">linewidth =</span> <span class="fl">0.5</span>)<span class="sc">+</span></span>
+<span id="cb53-17"><a href="#cb53-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> lower_diff, <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linetype=</span><span class="st">"dashed"</span>, <span class="at">linewidth=</span><span class="fl">0.5</span>)<span class="sc">+</span></span>
+<span id="cb53-18"><a href="#cb53-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> upper_diff, <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linetype=</span><span class="st">"dashed"</span>, <span class="at">linewidth=</span><span class="fl">0.5</span>)<span class="sc">+</span></span>
+<span id="cb53-19"><a href="#cb53-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(ylus[<span class="dv">1</span>], ylus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(ylus[<span class="dv">1</span>], ylus[<span class="dv">2</span>], ylus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb53-20"><a href="#cb53-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(xlus[<span class="dv">1</span>], xlus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(xlus[<span class="dv">1</span>], xlus[<span class="dv">2</span>], xlus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb53-21"><a href="#cb53-21" aria-hidden="true" tabindex="-1"></a>    sgtheme0<span class="sc">+</span><span class="fu">theme</span>(<span class="at">aspect.ratio =</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">1.2</span>)<span class="sc">+</span></span>
+<span id="cb53-22"><a href="#cb53-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x=</span><span class="fu">expression</span>(<span class="fu">paste</span>(<span class="st">"Reference "</span>,AUC[<span class="fu">paste</span>(<span class="dv">0-24</span>,h)],<span class="st">" (mg·h/L)"</span>)),</span>
+<span id="cb53-23"><a href="#cb53-23" aria-hidden="true" tabindex="-1"></a>         <span class="at">y=</span><span class="st">"Difference (mg·h/L)"</span>,</span>
+<span id="cb53-24"><a href="#cb53-24" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> title_word)</span>
+<span id="cb53-25"><a href="#cb53-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(bap)</span>
+<span id="cb53-26"><a href="#cb53-26" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="passing-bablok-regression一致性评价" class="level2">
+<h2 class="anchored" data-anchor-id="passing-bablok-regression一致性评价">5.6 Passing Bablok regression一致性评价</h2>
+<p>PBR函数用来生成Passing Bablok regression图，取其首字母作为函数名，其参数有：</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>PBR <span class="ot">&lt;-</span> <span class="cf">function</span>(fullauc,</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>                  lssauc,</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>                  title_word,</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">point_shape=</span><span class="dv">1</span>,<span class="at">point_size=</span><span class="dv">2</span>,point){</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(mcr)</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(ggplot2)</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>  value <span class="ot">&lt;-</span> <span class="fu">mcreg</span>(lssauc, fullauc, <span class="at">method.reg =</span> <span class="st">"PaBa"</span>)</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>  intercept_est <span class="ot">&lt;-</span> value<span class="sc">@</span>para[<span class="dv">1</span>]</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>  intercept_lci <span class="ot">&lt;-</span> value<span class="sc">@</span>para[<span class="dv">5</span>]</span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>  intercept_uci <span class="ot">&lt;-</span> value<span class="sc">@</span>para[<span class="dv">7</span>]</span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>  gradient_est <span class="ot">&lt;-</span> value<span class="sc">@</span>para[<span class="dv">2</span>]</span>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>  gradient_lci <span class="ot">&lt;-</span> value<span class="sc">@</span>para[<span class="dv">6</span>]</span>
+<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a>  gradient_uci <span class="ot">&lt;-</span> value<span class="sc">@</span>para[<span class="dv">8</span>]</span>
+<span id="cb54-15"><a href="#cb54-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb54-16"><a href="#cb54-16" aria-hidden="true" tabindex="-1"></a>  xylus <span class="ot">&lt;-</span> <span class="fu">lus</span>(<span class="fu">c</span>(lssauc,fullauc))</span>
+<span id="cb54-17"><a href="#cb54-17" aria-hidden="true" tabindex="-1"></a>  xylus[<span class="dv">2</span>] <span class="ot">&lt;-</span>xylus[<span class="dv">2</span>]<span class="sc">*</span><span class="fl">1.1</span></span>
+<span id="cb54-18"><a href="#cb54-18" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(lssauc, fullauc)</span>
+<span id="cb54-19"><a href="#cb54-19" aria-hidden="true" tabindex="-1"></a>  data_CI <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x=</span><span class="fu">seq</span>(xylus[<span class="dv">1</span>],xylus[<span class="dv">2</span>],xylus[<span class="dv">3</span>]<span class="sc">/</span><span class="dv">50</span>))</span>
+<span id="cb54-20"><a href="#cb54-20" aria-hidden="true" tabindex="-1"></a>  data_CI<span class="sc">$</span>ymin <span class="ot">&lt;-</span> gradient_lci <span class="sc">*</span> data_CI<span class="sc">$</span>x <span class="sc">+</span> intercept_lci</span>
+<span id="cb54-21"><a href="#cb54-21" aria-hidden="true" tabindex="-1"></a>  data_CI<span class="sc">$</span>ymax <span class="ot">&lt;-</span> gradient_uci <span class="sc">*</span> data_CI<span class="sc">$</span>x <span class="sc">+</span> intercept_uci</span>
+<span id="cb54-22"><a href="#cb54-22" aria-hidden="true" tabindex="-1"></a>  data_CI<span class="sc">$</span>y <span class="ot">&lt;-</span> (data_CI<span class="sc">$</span>ymin<span class="sc">+</span>data_CI<span class="sc">$</span>ymax)<span class="sc">/</span><span class="dv">2</span></span>
+<span id="cb54-23"><a href="#cb54-23" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb54-24"><a href="#cb54-24" aria-hidden="true" tabindex="-1"></a>  pbr <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> data, <span class="fu">aes</span>(<span class="at">x=</span>lssauc,<span class="at">y=</span>fullauc))<span class="sc">+</span></span>
+<span id="cb54-25"><a href="#cb54-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">shape=</span>point_shape,<span class="at">size=</span>point_size,<span class="at">alpha =</span> point_size)<span class="sc">+</span></span>
+<span id="cb54-26"><a href="#cb54-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>,<span class="at">linewidth =</span> <span class="fl">0.5</span>,<span class="at">linetype =</span> <span class="st">"dashed"</span>)<span class="sc">+</span></span>
+<span id="cb54-27"><a href="#cb54-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_abline</span>(<span class="at">slope =</span> gradient_est, <span class="at">intercept =</span> intercept_est,<span class="at">linewidth =</span> <span class="fl">0.5</span>,<span class="at">color =</span> <span class="st">"dodgerblue"</span>)<span class="sc">+</span></span>
+<span id="cb54-28"><a href="#cb54-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_ribbon</span>(<span class="at">data =</span> data_CI,<span class="fu">aes</span>(<span class="at">x=</span>x,<span class="at">y=</span>y, <span class="at">ymin=</span>ymin, <span class="at">ymax=</span>ymax),<span class="at">alpha=</span><span class="fl">0.2</span>,<span class="at">fill =</span> <span class="st">"dodgerblue"</span>,<span class="at">show.legend =</span> F)<span class="sc">+</span></span>
+<span id="cb54-29"><a href="#cb54-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(xylus[<span class="dv">1</span>], xylus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(xylus[<span class="dv">1</span>], xylus[<span class="dv">2</span>], xylus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb54-30"><a href="#cb54-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(xylus[<span class="dv">1</span>], xylus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(xylus[<span class="dv">1</span>], xylus[<span class="dv">2</span>], xylus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb54-31"><a href="#cb54-31" aria-hidden="true" tabindex="-1"></a>    sgtheme0<span class="sc">+</span><span class="fu">theme</span>(<span class="at">aspect.ratio =</span> <span class="dv">1</span><span class="sc">/</span><span class="dv">1</span>)<span class="sc">+</span></span>
+<span id="cb54-32"><a href="#cb54-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x=</span><span class="fu">expression</span>(<span class="fu">paste</span>(<span class="st">"Predicted "</span>,AUC[<span class="fu">paste</span>(<span class="dv">0-24</span>,h)],<span class="st">" (mg·h/L)"</span>)),</span>
+<span id="cb54-33"><a href="#cb54-33" aria-hidden="true" tabindex="-1"></a>         <span class="at">y=</span><span class="fu">expression</span>(<span class="fu">paste</span>(<span class="st">"Reference "</span>,AUC[<span class="fu">paste</span>(<span class="dv">0-24</span>,h)],<span class="st">" (mg·h/L)"</span>)),</span>
+<span id="cb54-34"><a href="#cb54-34" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> title_word)</span>
+<span id="cb54-35"><a href="#cb54-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(pbr)</span>
+<span id="cb54-36"><a href="#cb54-36" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="示例-4" class="level2">
+<h2 class="anchored" data-anchor-id="示例-4">5.7示例</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co">#生成有限采样策略的AUC数据集</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>AUC_multi <span class="ot">&lt;-</span> <span class="fu">lss_multi</span>(<span class="at">data_table =</span> examp_AUC_Table01,<span class="at">data_conc =</span> example_conc,<span class="at">lss_list =</span> lss_list)</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(AUC_multi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    AUCfull      AUC0      AUC6    AUC0_1    AUC2_6  AUC0_1_2  AUC0_2_6
+1 129.69401 101.14348 140.32629 112.18081 141.44894 129.83034 132.94990
+2  62.68937  88.97039  71.17959  60.30848  70.13304  63.68066  63.28098
+3 204.47272 188.34574 187.95806 206.90629 185.42132 194.69835 200.49918
+4 106.37991 121.40273 108.15915  94.42473 105.40975 100.00361 102.64458
+5 103.07061 118.05805 110.91747  87.36000 108.12744 101.83126 103.07409
+6 132.73341 137.30339 131.93910 122.37255 129.76380 133.18699 131.71217</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co">#生成多重线性回归法的公式</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>formula_multi <span class="ot">&lt;-</span> <span class="fu">lss_formula</span>(<span class="at">data_table =</span> examp_AUC_Table01,<span class="at">data_conc =</span> example_conc,<span class="at">lss_list =</span> lss_list)</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(formula_multi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  strtg                                 fml
+1     0               AUC0-24h=85.5+37.5×C0
+2     6               AUC0-24h=14.8+14.1×C6
+3   0,1         AUC0-24h=6.1+41.8×C0+5.0×C1
+4   2,6        AUC0-24h=10.1+0.7×C2+13.3×C6
+5 0,1,2 AUC0-24h=4.7+33.0×C0-4.6×C1+10.6×C2
+6 0,2,6  AUC0-24h=2.6+18.4×C0+2.6×C2+8.4×C6</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co">#生成有限采样策略的准确性评价结果</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>result_multi <span class="ot">&lt;-</span> <span class="fu">lss_accuracy</span>(AUC_multi)</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(result_multi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  strtg       MPE      RMSE        R2
+1     0 35.815448 35.916080 0.4434036
+2     6  9.917029 10.899053 0.9487445
+3   0,1 21.811488 20.366489 0.8210240
+4   2,6  9.540385 10.486791 0.9525487
+5 0,1,2  9.340905 11.022712 0.9475749
+6 0,2,6  3.244003  3.311845 0.9952674</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co">#首先生成AUC数据集的列名，为接下来作图做铺垫</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>auc_colnames <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (lss <span class="cf">in</span> lss_list){</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>  auc_colnames <span class="ot">&lt;-</span> <span class="fu">c</span>(auc_colnames,<span class="fu">paste0</span>(<span class="st">"AUC"</span>,<span class="fu">paste</span>(lss,<span class="at">collapse =</span> <span class="st">"_"</span>)))</span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(auc_colnames)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "AUC0"     "AUC6"     "AUC0_1"   "AUC2_6"   "AUC0_1_2" "AUC0_2_6"</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co">#生成Bland-Altman plot</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>plot_result <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>i<span class="ot">=</span><span class="dv">1</span></span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (auc_colname <span class="cf">in</span> auc_colnames){</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>  plot_delta <span class="ot">&lt;-</span> <span class="fu">BAP</span>(<span class="at">fullauc =</span> AUC_multi[[<span class="st">"AUCfull"</span>]],</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a>                    <span class="at">lssauc =</span> AUC_multi[[auc_colname]],</span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>                    <span class="at">title_word =</span> <span class="fu">gsub</span>(<span class="st">"_"</span>,<span class="st">","</span>,<span class="fu">gsub</span>(<span class="st">"AUC"</span>,<span class="st">"c"</span>,auc_colname)))</span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a>  plot_result[[i]] <span class="ot">&lt;-</span> plot_delta</span>
+<span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a>  i<span class="ot">=</span>i<span class="sc">+</span><span class="dv">1</span></span>
+<span id="cb63-10"><a href="#cb63-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb63-11"><a href="#cb63-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb63-12"><a href="#cb63-12" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(plot_result[[<span class="dv">1</span>]],</span>
+<span id="cb63-13"><a href="#cb63-13" aria-hidden="true" tabindex="-1"></a>             plot_result[[<span class="dv">2</span>]],</span>
+<span id="cb63-14"><a href="#cb63-14" aria-hidden="true" tabindex="-1"></a>             plot_result[[<span class="dv">3</span>]],</span>
+<span id="cb63-15"><a href="#cb63-15" aria-hidden="true" tabindex="-1"></a>             plot_result[[<span class="dv">4</span>]],</span>
+<span id="cb63-16"><a href="#cb63-16" aria-hidden="true" tabindex="-1"></a>             plot_result[[<span class="dv">5</span>]],</span>
+<span id="cb63-17"><a href="#cb63-17" aria-hidden="true" tabindex="-1"></a>             plot_result[[<span class="dv">6</span>]],</span>
+<span id="cb63-18"><a href="#cb63-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">ncol =</span> <span class="dv">3</span>, <span class="at">nrow =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="群体药代动力学工具2023_0609_files/figure-html/unnamed-chunk-43-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="co">#生成Passing Bablok regression图</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>plot_result <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>i<span class="ot">=</span><span class="dv">1</span></span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (auc_colname <span class="cf">in</span> auc_colnames){</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>  plot_delta <span class="ot">&lt;-</span> <span class="fu">PBR</span>(<span class="at">fullauc =</span> AUC_multi[[<span class="st">"AUCfull"</span>]],</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>                    <span class="at">lssauc =</span> AUC_multi[[auc_colname]],</span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>                    <span class="at">title_word =</span> <span class="fu">gsub</span>(<span class="st">"_"</span>,<span class="st">","</span>,<span class="fu">gsub</span>(<span class="st">"AUC"</span>,<span class="st">"c"</span>,auc_colname)))</span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>  plot_result[[i]] <span class="ot">&lt;-</span> plot_delta</span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>  i<span class="ot">=</span>i<span class="sc">+</span><span class="dv">1</span></span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a><span class="fu">grid.arrange</span>(plot_result[[<span class="dv">1</span>]],</span>
+<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a>             plot_result[[<span class="dv">2</span>]],</span>
+<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a>             plot_result[[<span class="dv">3</span>]],</span>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a>             plot_result[[<span class="dv">4</span>]],</span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a>             plot_result[[<span class="dv">5</span>]],</span>
+<span id="cb64-17"><a href="#cb64-17" aria-hidden="true" tabindex="-1"></a>             plot_result[[<span class="dv">6</span>]],</span>
+<span id="cb64-18"><a href="#cb64-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">ncol =</span> <span class="dv">3</span>, <span class="at">nrow =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+-Inf</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="群体药代动力学工具2023_0609_files/figure-html/unnamed-chunk-44-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="有限采样策略-贝叶斯法" class="level1">
+<h1>6.有限采样策略-贝叶斯法</h1>
+<section id="自定义函数virtual_cov" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数virtual_cov">6.1自定义函数virtual_cov</h2>
+<p>使用贝叶斯法，先从Phoenix中使用simulation方法生成n倍的虚拟人群，但是这个基于源人群n倍的虚拟人群并未匹配协变量，故而建立本函数简化过程。参数有：</p>
+<p>data_virtual：从Phoenix中使用simulation方法生成n倍的虚拟人群；</p>
+<p>data_conc：长数据格式的浓度-时间-id数据（且拥有匹配的协变量）；</p>
+<p>hours：采样点距离首次给药的时间（小时）；</p>
+<p>cov_list：需要匹配进data_virtual的协变量名，毕竟不是所有的协变量都被纳入了模型中，只需要模型运行所依赖的几个协变量即可。注意将id列的列名放在第一个；</p>
+<p>cov_time：在data_conc拥有很多时间截面的协变量，尽管这些协变量大概率不随时间发生变化，然而还是应该指定将哪个时间截面的协变量用作data_virtual的匹配，默认值=0；</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>virtual_cov <span class="ot">&lt;-</span> <span class="cf">function</span>(data_virtual,</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>                        data_conc,</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>                        hours,</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>                        cov_list,</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>                        <span class="at">cov_time =</span> <span class="dv">0</span>){</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>  cov <span class="ot">&lt;-</span> data_conc</span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>  cov <span class="ot">&lt;-</span> cov[cov<span class="sc">$</span>time0<span class="sc">==</span>cov_time,]</span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>  cov <span class="ot">&lt;-</span> cov[,<span class="fu">which</span>(<span class="fu">colnames</span>(cov) <span class="sc">%in%</span> cov_list)]</span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>  data_virtual <span class="ot">&lt;-</span> <span class="fu">merge</span>(data_virtual,cov, <span class="at">by =</span> cov_list[<span class="dv">1</span>], <span class="at">all.x =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(data_virtual)[<span class="fu">which</span>(<span class="fu">colnames</span>(data_virtual) <span class="sc">==</span> <span class="st">"C"</span>)] <span class="ot">&lt;-</span> <span class="st">"CC"</span></span>
+<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a>  data_virtual<span class="sc">$</span>time0 <span class="ot">&lt;-</span> data_virtual<span class="sc">$</span>time <span class="sc">-</span> hours</span>
+<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a>  data_virtual<span class="sc">$</span>id2 <span class="ot">&lt;-</span> data_virtual<span class="sc">$</span>id <span class="sc">+</span> data_virtual<span class="sc">$</span>repl<span class="sc">*</span><span class="fu">max</span>(data_virtual<span class="sc">$</span>id)</span>
+<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a>  data_virtual <span class="ot">&lt;-</span> data_virtual[<span class="fu">order</span>(data_virtual<span class="sc">$</span>id2,data_virtual<span class="sc">$</span>time0),]</span>
+<span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(data_virtual)</span>
+<span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数virtual_seg" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数virtual_seg">6.2自定义函数virtual_seg</h2>
+<p>上一个virtual_cov函数即是虚拟人群的全浓度（full），本virtual_seg函数（segmentation，分割）的用处是将匹配有协变量的浓度时间数据（长数据），依照指定的有限采样策略（lss_list）分隔为多个子集，并以此策略命名，统一保存于.xlsx文件的多个sheet中。参数有：</p>
+<p>data_virtual：已经匹配协变量的虚拟人群全浓度数据；</p>
+<p>lss_list：储存有限采样策略的列表；</p>
+<p>drug：用以区分这个药物的命名，字符型；</p>
+<p>file_path：要保存.xlsx的目标路径，比如”./virtual_for_bayes/LZDinput_test.xlsx”</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>virtual_seg <span class="ot">&lt;-</span> <span class="cf">function</span>(data_virtual,</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>                        lss_list,</span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>                        drug,</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>                        file_path){</span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a>  vpeople <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a>  vpeople[[<span class="fu">paste0</span>(drug,<span class="st">"full"</span>)]] <span class="ot">&lt;-</span> data_virtual</span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (vec0 <span class="cf">in</span> lss_list){</span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a>    vec <span class="ot">&lt;-</span> <span class="fu">paste0</span>(drug,<span class="fu">paste</span>(vec0,<span class="at">collapse =</span> <span class="st">"_"</span>))</span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a>    vpeople[[vec]] <span class="ot">&lt;-</span> data_virtual[data_virtual<span class="sc">$</span>time0 <span class="sc">%in%</span> vec0,]</span>
+<span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">#print(paste0(vec," has been done."))</span></span>
+<span id="cb67-11"><a href="#cb67-11" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb67-12"><a href="#cb67-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(openxlsx)</span></span>
+<span id="cb67-13"><a href="#cb67-13" aria-hidden="true" tabindex="-1"></a>  wb_vp <span class="ot">&lt;-</span> <span class="fu">createWorkbook</span>()</span>
+<span id="cb67-14"><a href="#cb67-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (vperson <span class="cf">in</span> <span class="fu">names</span>(vpeople)){</span>
+<span id="cb67-15"><a href="#cb67-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">addWorksheet</span>(wb_vp, vperson)</span>
+<span id="cb67-16"><a href="#cb67-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb67-17"><a href="#cb67-17" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb67-18"><a href="#cb67-18" aria-hidden="true" tabindex="-1"></a>  i<span class="ot">=</span><span class="dv">1</span></span>
+<span id="cb67-19"><a href="#cb67-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (vperson <span class="cf">in</span> vpeople){</span>
+<span id="cb67-20"><a href="#cb67-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">writeData</span>(wb_vp, <span class="fu">names</span>(vpeople)[i], vperson)</span>
+<span id="cb67-21"><a href="#cb67-21" aria-hidden="true" tabindex="-1"></a>    i<span class="ot">=</span>i<span class="sc">+</span><span class="dv">1</span></span>
+<span id="cb67-22"><a href="#cb67-22" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb67-23"><a href="#cb67-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveWorkbook</span>(wb_vp, <span class="at">file =</span> file_path, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb67-24"><a href="#cb67-24" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="生成虚拟人群dosing" class="level2">
+<h2 class="anchored" data-anchor-id="生成虚拟人群dosing">6.3生成虚拟人群dosing</h2>
+<p>这一步比较简单，是虚拟人群准备的最后一步，示例：</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="co">#dosing &lt;- data.frame(id=1:1044,Aa=600,Time = 0, ADDL = 13)</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a><span class="co">#write.csv(x = dosing,file = "./virtual_for_bayes/dosing.csv")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数lss_bayes" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数lss_bayes">6.4自定义函数lss_bayes</h2>
+<p>将virtual_seg生成的.xls导入phoenix运算，逐一生成AUC table01文件，保存在output文件夹，统一命名：“cfull”, “c0”, “c0,6”, “c0,1,2” （注意：是.xls，并非.xlsx）</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87/003.jpg" class="img-fluid figure-img"></p>
+</figure>
+</div>
+<p>使用lss_bayes函数将其整理为AUC数据集，形同lss_multi函数的输出，都可输入lss_accuracy获得最终的accuracy表。参数有：</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>lss_bayes <span class="ot">&lt;-</span> <span class="cf">function</span>(file_path,</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>                      lss_list){</span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#保持lss_list顺序，因此不用list.file读取，而是生成</span></span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>  files <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"cfull"</span>)</span>
+<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(lss_list)){</span>
+<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>    files[i<span class="sc">+</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"c"</span>,<span class="fu">paste</span>(lss_list[[i]], <span class="at">collapse =</span> <span class="st">","</span>))</span>
+<span id="cb69-7"><a href="#cb69-7" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb69-8"><a href="#cb69-8" aria-hidden="true" tabindex="-1"></a>  files2 <span class="ot">&lt;-</span> <span class="fu">paste0</span>(file_path,files,<span class="st">".xls"</span>)</span>
+<span id="cb69-9"><a href="#cb69-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb69-10"><a href="#cb69-10" aria-hidden="true" tabindex="-1"></a>  bayes <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb69-11"><a href="#cb69-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(files)) {</span>
+<span id="cb69-12"><a href="#cb69-12" aria-hidden="true" tabindex="-1"></a>    bayes[[files[i]]] <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(files2[i])</span>
+<span id="cb69-13"><a href="#cb69-13" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb69-14"><a href="#cb69-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">#将所有数据框的"id2"改为"id"</span></span>
+<span id="cb69-15"><a href="#cb69-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(bayes)) {</span>
+<span id="cb69-16"><a href="#cb69-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(bayes[[i]])[<span class="fu">which</span>(<span class="fu">colnames</span>(bayes[[i]]) <span class="sc">==</span> <span class="st">"id2"</span>)] <span class="ot">&lt;-</span> <span class="st">"id"</span></span>
+<span id="cb69-17"><a href="#cb69-17" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb69-18"><a href="#cb69-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">#整合数据</span></span>
+<span id="cb69-19"><a href="#cb69-19" aria-hidden="true" tabindex="-1"></a>  bayes_auc <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">pk_auc</span>(bayes[[<span class="dv">1</span>]]))</span>
+<span id="cb69-20"><a href="#cb69-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(bayes_auc) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"AUC"</span>,<span class="fu">gsub</span>(<span class="st">","</span>,<span class="st">"_"</span>,<span class="fu">gsub</span>(<span class="st">"c"</span>,<span class="st">""</span>,files[<span class="dv">1</span>])))</span>
+<span id="cb69-21"><a href="#cb69-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">length</span>(files)){</span>
+<span id="cb69-22"><a href="#cb69-22" aria-hidden="true" tabindex="-1"></a>    data_delta <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">pk_auc</span>(bayes[[i]]))</span>
+<span id="cb69-23"><a href="#cb69-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">colnames</span>(data_delta) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"AUC"</span>,<span class="fu">gsub</span>(<span class="st">","</span>,<span class="st">"_"</span>,<span class="fu">gsub</span>(<span class="st">"c"</span>,<span class="st">""</span>,files[i])))</span>
+<span id="cb69-24"><a href="#cb69-24" aria-hidden="true" tabindex="-1"></a>    bayes_auc <span class="ot">&lt;-</span> <span class="fu">cbind</span>(bayes_auc,data_delta)</span>
+<span id="cb69-25"><a href="#cb69-25" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb69-26"><a href="#cb69-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(bayes_auc)</span>
+<span id="cb69-27"><a href="#cb69-27" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="示例-5" class="level2">
+<h2 class="anchored" data-anchor-id="示例-5">6.5示例</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co">#导入数据，example_virtual就是已经匹配好协变量的千人模拟队列，每个模拟个体拥有0,1,2,6总共4个浓度点</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>example_virtual <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"example_virtual.xlsx"</span>)</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(example_virtual)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 5
+     id time0  time     CC   wgt
+  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+1     1     0   312  0.361    59
+2     1     1   313 18.5      59
+3     1     2   314 18.3      59
+4     1     6   318  9.26     59
+5     2     0   312  0.118    52
+6     2     1   313 13.2      52</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="co">#将全浓度的example_virtual保存为采样策略分割后的excel input表</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a><span class="fu">virtual_seg</span>(<span class="at">data_virtual =</span> example_virtual,<span class="at">lss_list =</span> lss_list,<span class="at">drug =</span> <span class="st">"ABR"</span>,<span class="at">file_path =</span> <span class="st">"./example_input.xlsx"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="%E6%96%87%E6%A1%A3%E5%9B%BE%E7%89%87/009.jpg" class="img-fluid figure-img"></p>
+</figure>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="co">#接下来，假设我们已经在phoenix中将所有的采样策略都跑了一遍，并导出了table01且将之重命名为相应的采样策略名字，比如“cfull”，“c6”，“c2,6”等，这些文件均保存于example_output文件夹。则我们可以使用lss_bayes函数生成贝叶斯法的AUC数据集。</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a><span class="co">#其余计算精确性指标、生成Bland-Altman plot和Passing Bablok regression等分析同上</span></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>AUC_bayes <span class="ot">&lt;-</span> <span class="fu">lss_bayes</span>(<span class="at">file_path =</span> <span class="st">"./example_output/"</span>,<span class="at">lss_list =</span> lss_list)</span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(AUC_bayes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    AUCfull      AUC0      AUC6    AUC0_1    AUC2_6  AUC0_1_2  AUC0_2_6
+1 134.84359 100.89355 136.80140 110.27362 135.05396 132.16729 134.78456
+2  84.46504 101.89481  88.38466  88.62001  85.06766  91.17698  84.96190
+3 141.93625 127.74318 136.34264 136.43547 138.26872 137.43971 140.20140
+4 101.15703  97.40185  99.36108  88.58934 100.10411  91.98032  99.51877
+5  91.69671  85.57300  92.09627  76.79159  91.29456  82.95466  90.60621
+6  96.98729  87.30675  94.16935  85.96593  94.99079  88.18161  95.05793</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="达标水平分析" class="level1">
+<h1>7.达标水平分析</h1>
+<p>注意：在用Phoenix生成模拟剂量的AUC时，除了要改dosing界面的剂量，还要改input tab里ADDL的剂量。（本次达标水平分析默认以AUC/MIC开展）</p>
+<section id="自定义函数pta_calculator" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数pta_calculator">7.1自定义函数pta_calculator</h2>
+<p>pta_calculator函数用来根据给定的AUC向量、MIC向量和阈值生成达标率向量，参数有：</p>
+<p>AUC：一个AUC数值向量</p>
+<p>MICs：本次分析模拟的MIC水平</p>
+<p>threshold：本次分析设定的阈值</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>pta_calculator <span class="ot">&lt;-</span> <span class="cf">function</span>(AUC,MICs,threshold){</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">seq_along</span>(MICs)</span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(MICs)){</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>    result[i] <span class="ot">&lt;-</span> <span class="fu">sum</span>(AUC<span class="sc">/</span>MICs[i] <span class="sc">&gt;=</span> threshold)<span class="sc">/</span><span class="fu">length</span>(AUC)<span class="sc">*</span><span class="dv">100</span></span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(result) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"m"</span>,<span class="fu">as.character</span>(MICs))</span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(result)</span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数pta_table" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数pta_table">7.2自定义函数pta_table</h2>
+<p>pta_table函数将基于一个填装不同用药方案的AUC向量的list（且带有方案名字），生成其在不同MIC水平下的达标率。参数有：</p>
+<p>pta_list：含有许多模拟剂量导出结果的list</p>
+<p>MICs：本次分析模拟的MIC水平</p>
+<p>threshold：本次分析设定的阈值</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>pta_table <span class="ot">&lt;-</span> <span class="cf">function</span>(pta_list,MICs,threshold){</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(pta_list)){</span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>    data_delta <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">data.frame</span>(<span class="fu">pta_calculator</span>(pta_list[[i]],MICs,threshold)))</span>
+<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rownames</span>(data_delta) <span class="ot">&lt;-</span> <span class="fu">names</span>(pta_list)[i]</span>
+<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>    result <span class="ot">&lt;-</span> <span class="fu">rbind</span>(result,data_delta)</span>
+<span id="cb76-7"><a href="#cb76-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb76-8"><a href="#cb76-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(result)</span>
+<span id="cb76-9"><a href="#cb76-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="自定义函数pta_plot" class="level2">
+<h2 class="anchored" data-anchor-id="自定义函数pta_plot">7.3自定义函数pta_plot</h2>
+<p>pta_plot函数可将经由pta_table处理的数据框生成PTA折线图，参数有：</p>
+<p>data：pta_table处理过的数据；</p>
+<p>regimen_order：图例中展示模拟剂量的顺序</p>
+<p>regimen_label：图例中展示模拟剂量的标签</p>
+<p>title_word：图标题</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>pta_plot <span class="ot">&lt;-</span> <span class="cf">function</span>(data,</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>                     regimen_order,</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>                     regimen_label,</span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>                     title_word,</span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">legend_position =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>),</span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">legend_justification =</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>)){</span>
+<span id="cb77-7"><a href="#cb77-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(reshape2)</span></span>
+<span id="cb77-8"><a href="#cb77-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">#library(ggplot2)</span></span>
+<span id="cb77-9"><a href="#cb77-9" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>regimen <span class="ot">&lt;-</span> <span class="fu">rownames</span>(data)</span>
+<span id="cb77-10"><a href="#cb77-10" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">melt</span>(data,<span class="at">id=</span><span class="st">"regimen"</span>)</span>
+<span id="cb77-11"><a href="#cb77-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(data) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"regimen"</span>,<span class="st">"mic"</span>,<span class="st">"pta"</span> )</span>
+<span id="cb77-12"><a href="#cb77-12" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>mic <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"m"</span>,<span class="st">""</span>,data<span class="sc">$</span>mic)</span>
+<span id="cb77-13"><a href="#cb77-13" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>mic <span class="ot">&lt;-</span> <span class="fu">factor</span>(data<span class="sc">$</span>mic)</span>
+<span id="cb77-14"><a href="#cb77-14" aria-hidden="true" tabindex="-1"></a>  ylus <span class="ot">&lt;-</span> <span class="fu">lus</span>(data<span class="sc">$</span>pta)</span>
+<span id="cb77-15"><a href="#cb77-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb77-16"><a href="#cb77-16" aria-hidden="true" tabindex="-1"></a>  ppta <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data,<span class="fu">aes</span>(mic,pta,<span class="at">group=</span>regimen,<span class="at">color=</span>regimen))<span class="sc">+</span></span>
+<span id="cb77-17"><a href="#cb77-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">size=</span><span class="dv">2</span>)<span class="sc">+</span></span>
+<span id="cb77-18"><a href="#cb77-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">linewidth=</span><span class="dv">1</span>,<span class="at">alpha=</span><span class="fl">0.9</span>)<span class="sc">+</span></span>
+<span id="cb77-19"><a href="#cb77-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="fu">aes</span>(<span class="at">yintercept=</span><span class="dv">90</span>),<span class="at">color=</span><span class="st">"#990000"</span>,<span class="at">linetype=</span><span class="st">"dashed"</span>)<span class="sc">+</span></span>
+<span id="cb77-20"><a href="#cb77-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(ylus[<span class="dv">1</span>], ylus[<span class="dv">2</span>]),<span class="at">breaks =</span> <span class="fu">seq</span>(ylus[<span class="dv">1</span>], ylus[<span class="dv">2</span>], ylus[<span class="dv">3</span>]))<span class="sc">+</span></span>
+<span id="cb77-21"><a href="#cb77-21" aria-hidden="true" tabindex="-1"></a>    sgtheme0<span class="sc">+</span><span class="fu">theme</span>(<span class="at">aspect.ratio =</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">1.2</span>,</span>
+<span id="cb77-22"><a href="#cb77-22" aria-hidden="true" tabindex="-1"></a>                   <span class="at">legend.position =</span> legend_position,</span>
+<span id="cb77-23"><a href="#cb77-23" aria-hidden="true" tabindex="-1"></a>                   <span class="at">legend.justification =</span> legend_justification)<span class="sc">+</span></span>
+<span id="cb77-24"><a href="#cb77-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x=</span><span class="st">"MIC(mg/L)"</span>,</span>
+<span id="cb77-25"><a href="#cb77-25" aria-hidden="true" tabindex="-1"></a>         <span class="at">y=</span><span class="st">"Probability of target attainment(%)"</span>,</span>
+<span id="cb77-26"><a href="#cb77-26" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> title_word,</span>
+<span id="cb77-27"><a href="#cb77-27" aria-hidden="true" tabindex="-1"></a>         <span class="at">color =</span> <span class="st">"Regimens"</span>)<span class="sc">+</span></span>
+<span id="cb77-28"><a href="#cb77-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_color_discrete</span>(<span class="at">limits =</span> regimen_order,<span class="at">labels =</span> regimen_label)</span>
+<span id="cb77-29"><a href="#cb77-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(ppta)</span>
+<span id="cb77-30"><a href="#cb77-30" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="示例-6" class="level2">
+<h2 class="anchored" data-anchor-id="示例-6">7.4示例</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="co">#假设我们已获得PTA结果的table01表，将其根据相应的模拟剂量重命名为"ABR_600.xls", "ABR_1200.xls", "ABR_1800.xls", "ABR_2400.xls"，并保存于example_pta目录下。</span></span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a><span class="co">#导入数据</span></span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>pta_ABR <span class="ot">&lt;-</span> <span class="fu">import_excel</span>(<span class="at">list_path =</span> <span class="st">"./example_pta/"</span>,<span class="at">excel_type =</span> <span class="st">".xls"</span>)</span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a><span class="co">#令id唯一</span></span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(pta_ABR)){</span>
+<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a>  pta_ABR[[i]]<span class="sc">$</span>id <span class="ot">&lt;-</span> pta_ABR[[i]]<span class="sc">$</span>id <span class="sc">+</span> <span class="fu">max</span>(pta_ABR[[i]]<span class="sc">$</span>id)<span class="sc">*</span>pta_ABR[[i]]<span class="sc">$</span>repl</span>
+<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb78-8"><a href="#cb78-8" aria-hidden="true" tabindex="-1"></a><span class="co">#将列表里的数据框替换为相应的AUC向量</span></span>
+<span id="cb78-9"><a href="#cb78-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(pta_ABR)){</span>
+<span id="cb78-10"><a href="#cb78-10" aria-hidden="true" tabindex="-1"></a>  pta_ABR[[i]] <span class="ot">&lt;-</span> <span class="fu">pk_auc</span>(pta_ABR[[i]])</span>
+<span id="cb78-11"><a href="#cb78-11" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="co">#假设我们想要模拟的MIC为0.03,0.06,0.125,0.25,0.5,1,2。</span></span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a><span class="co">#假设我们设定阈值为150</span></span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>result_pta <span class="ot">&lt;-</span> <span class="fu">pta_table</span>(pta_ABR,<span class="fu">c</span>(<span class="fl">0.03</span>,<span class="fl">0.06</span>,<span class="fl">0.125</span>,<span class="fl">0.25</span>,<span class="fl">0.5</span>,<span class="dv">1</span>,<span class="dv">2</span>),<span class="dv">150</span>)</span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(result_pta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         m0.03 m0.06 m0.125 m0.25 m0.5   m1   m2
+ABR_1200   100   100  100.0  99.9 97.3 72.5 21.6
+ABR_1800   100   100  100.0 100.0 99.7 92.6 49.1
+ABR_2400   100   100  100.0 100.0 99.9 97.3 72.5
+ABR_600    100   100   99.9  97.3 72.5 21.6  1.9</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="co">#PTA作图</span></span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pta_plot</span>(<span class="at">data=</span>result_pta,</span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">regimen_order =</span> <span class="fu">c</span>(<span class="st">"ABR_600"</span>, <span class="st">"ABR_1200"</span>, <span class="st">"ABR_1800"</span>, <span class="st">"ABR_2400"</span>),</span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">regimen_label =</span> <span class="fu">c</span>(<span class="st">"600mg QD"</span>, <span class="st">"1200mg QD"</span>, <span class="st">"1800mg QD"</span>, <span class="st">"2400mg QD"</span>),</span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">title_word =</span> <span class="st">"Probability of target attainment"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="群体药代动力学工具2023_0609_files/figure-html/unnamed-chunk-57-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
