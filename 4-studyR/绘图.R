@@ -252,7 +252,7 @@ data_plot(mtcars, x=cyl,y=disp,
           type="line")
 
 data_plot(mtcars, x=cyl,y=disp,
-          trace=am,
+          trace=vs,
           add="mean_sd",
           type="line", pd=0.1)
 ##
@@ -262,32 +262,29 @@ data_plot(mtcars, x=cyl, y=disp,
           legend.position="top",
           axis.text.angle=45)
 data_plot(mtcars, x=cyl, y=disp,
-           type="box", add="jitter",
+           type="box", 
+           add="point",
+           add.params = list(position=position_jitter(0.1)),
            legend.position="top",
            axis.text.angle=45)
-
 data_plot(mtcars,
            x=cyl, y=disp, 
-           trace=am, facet= vs,
-           type="box", pd=0.9)
+           trace=am,pd=0.8,
+           facet= vs,
+           type="box")
 data_plot(mtcars, x=cyl, y=disp, 
-           trace=am,
-           add="jitter",
-           type="box", pd=0.9)
-data_plot(mtcars, x=cyl, y=disp, trace=am,
-          type="box", 
-          pd=0.9,
+           trace=am, pd=0.8,
+           add="point",
+           add.params = list(position=position_jitterdodge(jitter.width = 0.1,
+                                                          dodge.width = 0.8)),
+           type="box")
+data_plot(mtcars, x=cyl, y=disp, 
+          trace=am,pd=0.9,
           facet= vs,
-          labeller= labeller(vs=c("0"="VS:NO","1"="VS:Yes"))
-)
-
-<<<<<<< HEAD
-data_plot(mtcars, x=cyl,y=disp,trace=am, 
-          type="box", pd=0.6, add="point")
-
-=======
+          type="box", 
+          labeller= labeller(vs=c("0"="VS:NO","1"="VS:Yes")))
 ######################################################
->>>>>>> d40ea70 (update)
+
 source("script/data_plot.R")
 data_plot(mtcars, x=mpg,y=disp,
           type="point")
@@ -309,8 +306,7 @@ data_plot(mtcars, x=cyl,y=disp,
            type="point")
 data_plot(mtcars, 
           x=cyl,y=disp,
-          trace=am,
-          pd=0.6,
+          trace=am, pd=0.6,
           add="mean_sd",
           add.params = list(position =position_dodge(0.8)),
           type="point")
@@ -330,17 +326,17 @@ data_plot(mtcars, x=cyl,y=disp,trace=am, facet=vs,
 data_plot(mtcars, x=cyl,y=disp,
            add="mean",
            type="beeswarm")
+data_plot(mtcars, x=cyl,y=disp,
+          trace = vs,pd=0.5,
+          add="mean",
+          type="beeswarm")
 ####################################
 source("script/data_plot.R")
 data_plot(mtcars, x=cyl,y=disp, 
-<<<<<<< HEAD
+
           trace=am, facet=vs,
           type="bar",add="mean_sd", pd=0.9)
 
-
-=======
-          trace=am,
-          type="bar",add="mean_sd", pd=0.5)
 data_plot(mtcars, x=cyl,y=disp, 
            type="bar",add="mean_sd")
->>>>>>> d40ea70 (update)
+

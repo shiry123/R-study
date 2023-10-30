@@ -49,7 +49,8 @@ apsd %>%
             trace =device_type,
             type="point", 
             add="mean_sd",
-            add.params = list(position=position_nudge(0.2)))
+            add.params = list(position=position_nudge(x=0.2))
+            )
 apsd %>% 
   ggstripchart(x="capsule_batch",y="ism", 
                shape="device_type", color = "device_no",

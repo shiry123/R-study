@@ -51,7 +51,7 @@ data_plot = function(data, x, y,
       
       if(add=="mean"){
       p=p+stat_summary(fun = mean, geom = "crossbar",
-                       position = position_dodge(pd), 
+                       position =position_dodge(pd), 
                        colour = "blue", linewidth = 0.3, width =0.3,
                        show.legend = FALSE)
       }else if(add=="mean_sd"){
@@ -95,27 +95,21 @@ data_plot = function(data, x, y,
         if(as_label(trace)==as_label(x) | as_label(trace)=="NULL"){
           p=ggplot(data, aes(x=!!x,y=!!y, group=1))+
             geom_point2(stat="summary",fun="mean",
-                        position = position_dodge(pd))+
+                        position =position_dodge(pd))+
             geom_line(stat="summary",fun="mean",
-                      position = position_dodge(pd), linewidth=linewidth)
-
+                      position =position_dodge(pd), linewidth=linewidth)
         }else{
           p=ggplot(data, aes(x=!!x,y=!!y, group=!!trace, color=!!trace))+
             geom_point2(stat="summary",fun="mean",
-                       position = position_dodge(pd))+
+                       position =position_dodge(pd))+
             geom_line(stat="summary", fun="mean",
-                      position = position_dodge(pd), linewidth=linewidth)
+                      position =position_dodge(pd), linewidth=linewidth)
         }
           p=p+
             stat_summary(fun.data = "mean_sd",geom="pointrange",
-                           position = position_dodge(pd))+
+                           position =position_dodge(pd))+
             scale_color_see()
       }  else{
-
-        p=ggplot(data, aes(x=!!x,y=!!y, color=!!trace))+
-          geom_point2()+
-          geom_line(aes(group=!!line.group), linewidth=linewidth)+
-
         p=ggplot(data, aes(x=!!x,y=!!y, group=!!trace, color=!!trace))+
           geom_point2()+
           geom_line(linewidth=linewidth)+
@@ -138,19 +132,8 @@ data_plot = function(data, x, y,
           scale_fill_see()
       }
 
-      if(add=="jitter"){
-          p=p+
-            geom_jitter(position = position_jitterdodge(jitter.width = 0.1,
-                                                        dodge.width=pd))
-
-          if(as_label(trace)==as_label(x) | as_label(trace)=="NULL"){
-            p=p+
-              geom_jitter(width = 0.2)
-          }else{
-            p=p+
-              geom_jitter(position = position_jitterdodge(jitter.width = 0.2,
-                                                           dodge.width=pd))
-          }
+      if(add=="point"){
+          p=p+geom_point(position =position)
         }
     },
     "bar"={
