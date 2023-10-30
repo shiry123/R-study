@@ -1,4 +1,5 @@
 ################### T5 装置
+getwd()
 apsd=read_clip_tbl() %>% janitor::clean_names() %>% 
      convert_as_factor(capsule_batch)
 
@@ -37,7 +38,7 @@ plotdata %>%
   geom_line(aes(group=capsule_batch),
             stat="summary", fun="mean")+
   theme_lucid(axis.text.angle = 90)
-
+setwd("D:/Mywd")
 source("script/data_plot.R")
 plotdata %>% 
   data_plot(x=location, y=amount,

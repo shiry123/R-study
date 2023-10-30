@@ -41,11 +41,6 @@ data_plot = function(data, x, y,
 # ...
   var_args = list(...)
   linewidth=if(!is.null(var_args[["linewidth"]])) var_args[["linewidth"]] else 0.5
-<<<<<<< HEAD
-=======
-  
-
->>>>>>> d40ea70 (update)
 
   ### 不同类型图形
   switch (type,
@@ -116,15 +111,14 @@ data_plot = function(data, x, y,
                            position = position_dodge(pd))+
             scale_color_see()
       }  else{
-<<<<<<< HEAD
+
         p=ggplot(data, aes(x=!!x,y=!!y, color=!!trace))+
           geom_point2()+
           geom_line(aes(group=!!line.group), linewidth=linewidth)+
-=======
+
         p=ggplot(data, aes(x=!!x,y=!!y, group=!!trace, color=!!trace))+
           geom_point2()+
           geom_line(linewidth=linewidth)+
->>>>>>> d40ea70 (update)
           scale_color_see()
       }
     },
@@ -145,12 +139,9 @@ data_plot = function(data, x, y,
       }
 
       if(add=="jitter"){
-<<<<<<< HEAD
           p=p+
             geom_jitter(position = position_jitterdodge(jitter.width = 0.1,
                                                         dodge.width=pd))
-=======
->>>>>>> d40ea70 (update)
 
           if(as_label(trace)==as_label(x) | as_label(trace)=="NULL"){
             p=p+
