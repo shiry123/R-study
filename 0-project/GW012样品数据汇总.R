@@ -1,5 +1,5 @@
 getwd()
-ddu <- import("rawdata/GW012/GW012样品数据汇总.xlsx",sheet="RLD-DDU") %>% 
+ddu <- import("rawdata/GW012/GW012-样品数据汇总.xlsx",sheet="RLD-DDU") %>% 
        janitor::clean_names()
 
 
@@ -7,7 +7,7 @@ ddu <- import("rawdata/GW012/GW012样品数据汇总.xlsx",sheet="RLD-DDU") %>%
 #############################################################  
 apsd <- read_clip_tbl() %>% janitor::clean_names()
 
-apsd <- import("rawdata/GW012/GW012样品数据汇总.xlsx",sheet="RLD-APSD") %>% 
+apsd <- import("rawdata/GW012/GW012-样品数据汇总.xlsx",sheet="RLD-APSD") %>% 
         janitor::clean_names()
 str(apsd)
 colnames(apsd)

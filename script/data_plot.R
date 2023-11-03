@@ -105,8 +105,7 @@ data_plot = function(data, x, y,
             geom_line(stat="summary", fun="mean",
                       position =position_dodge(pd), linewidth=linewidth)
         }
-          p=p+
-            stat_summary(fun.data = "mean_sd",geom="pointrange",
+          p=p+stat_summary(fun.data = "mean_sd",geom="pointrange",
                            position =position_dodge(pd))+
             scale_color_see()
       }  else{

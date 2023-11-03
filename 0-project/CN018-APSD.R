@@ -20,14 +20,14 @@ levels.20=c("capsuleshell","device","throat","preseparator","stage0","stage1",
 # plotdata
 plotdata=apsd %>% 
   rowid_to_column("id") %>% 
-  select(1:20) %>% 
-  pivot_longer(8:20, names_to ="location", values_to = "amount") %>% 
+  select(1:21) %>% 
+  pivot_longer(9:21, names_to ="location", values_to = "amount") %>% 
   mutate(location=fct_relevel(location, levels.20))
 colnames(plotdata)
 
 plotdata %>% 
   ggplot(aes(x=location, y=amount, color=capsule_batch))+
-  geom_point2()+
+  geom_point2(aes(shape=device_type))+
   geom_line(aes(group=id))+
   facet_wrap(~capsule_batch)+
   theme_lucid(axis.text.angle = 90)
