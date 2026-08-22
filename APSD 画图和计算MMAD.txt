@@ -1,0 +1,224 @@
+##method has 2 values: C and A, refer to CITDAS and Regression for all
+APSD = function(equipment=c("ACI","NGI"), 
+                method=c("C","A"), mass, FR, result=c("MMAD","GSD","FPD")){
+  
+  equipment=match.arg(equipment)
+  method=match.arg(method)
+  result=match.arg(result)
+  
+  mass=unlist(as.numeric(mass))
+  mass[is.na(mass)]=0
+  cm.temp=append(cumsum(rev(mass))/sum(mass),0,0)
+  cm=rev(cm.temp[-length(cm.temp)])
+  z=ifelse(is.infinite(qnorm(cm)),NA,qnorm(cm))
+  
+  ###ECD calculation part
+  if(equipment=="ACI"){
+    ECD28.3=c(9.0,5.8,4.7,3.3,2.1,1.1,0.7,0.43,0)
+    ECD60=c(8.6,6.5,4.4,3.2,1.9,1.2,0.55,0.26,0)
+    ECD90=c(8,6.5,5.2,3.5,2.6,1.7,1,0.22,0)
+    if(FR < 60){
+      ECD=ECD28.3*(28.3/FR)^0.5
+    }else if(FR >=60 & FR<90){
+      ECD=ECD60*(60/FR)^0.5
+    }else{
+      ECD=ECD90*(90/FR)^0.5
+    }
+  }
+  if(equipment=="NGI"){
+    ECD15=c(14.1,8.61,5.39,3.3,2.08,1.36,0.98,0)
+    ECD60=c(8.06,4.46,2.82,1.66,0.94,0.55,0.34,0)
+    factor1=c(0.54,0.52,0.50,0.47,0.52,0.60,0.67,0)
+    factor2=c(0.2692,0.4279,0.4339,0.5208,0.6130,0.7124,0.8598,0)
+    if(FR >= 30){
+      ECD=ECD60*(60/FR)^factor1
+    }else{
+      ECD=ECD15*(15/FR)^factor2
+    }
+  }
+  ###combine ECD and the z score, delete the data with NA
+  Datacombine <- data.frame(mass=mass,ECD=ECD,z=z)
+  
+  ###Do regression according to the requirement
+  if(method=="C"){
+    ######CITDAS: Regression with conditions
+    #find the index of z for the critical value
+    MMADindex=which(Datacombine$z<0)[1]  #then the index used for regression is MMADindex and MMADindex-1
+    mod1=lm(z~log(ECD), data=Datacombine[(MMADindex-1):MMADindex,])
+    MMAD=exp((0-coef(mod1)[1])/coef(mod1)[2])   #z=0
+    #SizeX
+    SizeXindex=ifelse(is.na(which(Datacombine$z<1)[1]),0,which(Datacombine$z<1)[1])  #then the index used for regression is SizeXindex and SizeXindex-1
+    ##find the z>-1 index if we can't find, then report 0
+    SizeYindex=ifelse(is.na(which(Datacombine$z<(-1))[1]),0,which(Datacombine$z<(-1))[1])  ##regression use SizeYindex-1 to SizeXindex
+    #FPD, find the index of ECD for the critical value
+    FPDindex=which(Datacombine$ECD<5)[1]
+    mod3=lm(z~log(ECD), data=Datacombine[(FPDindex-1):FPDindex,])
+    FPD=pnorm(coef(mod3)[2]*log(5)+coef(mod3)[1])*sum(Datacombine$mass, na.rm=TRUE)
+    ###calculate MMAD, GSD under different conditions
+    if(SizeXindex>1){  #represent there's z score>1, use SizeX to calculate GSD
+      mod2=lm(z~log(ECD), data=Datacombine[(SizeXindex-1):SizeXindex,])
+      SizeX=exp((1-coef(mod2)[1])/coef(mod2)[2])  #z=1
+      GSD=SizeX/MMAD
+    }else if(SizeXindex==1&SizeYindex>1){ #not find SizeX, find SizeY
+      mod4=lm(z~log(ECD), data=Datacombine[(SizeYindex-1):SizeYindex,])
+      SizeY=exp((-1-coef(mod4)[1])/coef(mod4)[2])   #z=-1
+      GSD=MMAD/SizeY
+    }else{
+      ######Do regression directly
+      mod=lm(z~log(ECD), data=Datacombine)
+      sizeX=exp((1-coef(mod)[1])/coef(mod)[2])   #z=1
+      GSD=sizeX/MMAD
+    }
+    ###check z(-1,1) has fitness >0.95
+    Subsetcheck<-subset(Datacombine,z>-1&z<1)
+    mod5=summary(lm(z~log(ECD), data=Subsetcheck))
+    if(mod5$r.squared<0.95){
+      GSD=paste("NA","R-square<0.95")
+    }
+    ###check if there're more than 50% of the cumulative dug deposit on filter/MOC or highest stage or
+    ###less than 3 stages with a cumulative drug mass>1%
+    percent=(mass/sum(mass))[[1]]
+    if(percent[1]>0.5|tail(percent[percent!= 0],n = 1)>0.5|sum(cm>0.01)<3){
+      GSD=paste("NA","Data deposit extreme")
+    }
+    if(sum(cm>0.01)<3){
+      FPD=paste("LOD","Data deposit extreme")
+    }
+    if(pnorm(coef(mod3)[2]*log(5)+coef(mod3)[1])<0.02){
+      FPD=paste("LOD","Related cumulative mass percent<2%")
+    }
+  }
+  if(method=="A"){
+    ######Do regression directly
+    mod=lm(z~log(ECD), data=Datacombine)
+    MMAD=exp((0-coef(mod)[1])/coef(mod)[2])   #z=0
+    sizeX=exp((1-coef(mod)[1])/coef(mod)[2])   #z=1
+    GSD=sizeX/MMAD
+    FPD=sum(subset(Datacombine,ECD<5,select=mass), na.rm = TRUE)
+  }
+  switch (result,
+          "MMAD" = return(MMAD),
+          "GSD" = return(GSD),
+          "FPD" = return(FPD))
+}
+
+
+
+#################
+apsd = import("rawdata/GW012/GW012-POC2-DOE.xlsx",sheet="apsd") %>%
+  janitor::clean_names()
+colnames(apsd)
+
+apsd %>% 
+  group_by(product_type) %>% 
+  get_summary_stats(ism, type = "mean_sd")
+  # mutate(EM=sprintf("%1.2f,%1.2f", mean-sd, mean+sd)) 
+
+
+apsd_plotdata = function(data, start_col, end_col){
+  library(tidyr)
+  library(dplyr)
+  plotdata = data |> 
+    dplyr::select(all_of(1:end_col)) |>
+    pivot_longer(cols=all_of(start_col:end_col),
+                 names_to ="location", values_to = "amount") 
+  plotdata <- as.data.frame(plotdata)
+  plotdata[is.na(plotdata)] <- 0
+  plotdata$order <- c(rep(1:(end_col-start_col+1),nrow(plotdata)/(end_col-start_col+1)))
+  plotdata$location <- reorder(plotdata$location, plotdata$order)
+  return(plotdata)
+}
+
+apsd_plotdata(apsd,12,21) %>% 
+  filter(amount < 100) %>% 
+  ggplot(aes(x=location, y=amount, color=product_type))+
+  geom_point()+
+  geom_line(aes(group=obj))+
+  labs(x="location")
+
+apsd_plotdata(apsd,12,21) %>% 
+  filter(amount < 100) %>% 
+  ggplot(aes(x=location, y=amount, color=product_type, group=product_type))+
+  geom_line(stat = "summary", fun=mean)+
+  geom_point(stat = "summary", fun=mean)+
+  stat_summary(fun.data = mean_sd, geom="errorbar", width=0.1)
+
+source("script/APSD.R")
+apsd[1, 13:21]
+APSD("ACI","C",apsd[1, 13:21],28.3,"MMAD")
+ 
+df=apsd %>% select(1,13:21)
+colnames(df)
+df %>% 
+ group_nest(obj) %>% 
+ mutate(MMAD=map_dbl(data,  \(x) APSD("ACI","A", x, 28.3,"MMAD")))
+
+df %>% 
+  mutate(MMAD_A=pmap_dbl(pick(2:10), \(...) APSD("ACI","A",c(...),28.3,"MMAD"))) %>% 
+  select(obj, MMAD_A) %>% 
+  bind_cols(apsd$mmad)
+
+########################################################################
+# ddu=read_clip_tbl() %>% janitor::clean_names()
+ddu = import("rawdata/GW012/GW012-POC2-DOE.xlsx",sheet="ddu") %>% 
+      janitor::clean_names() %>% 
+      mutate(act=as.numeric(act))
+# ddu %>% update_columns("act", as.numeric)
+colnames(ddu)
+str(ddu)
+ddu %>% map_df(~ sum(is.na(.)))
+ddu %>% filter(if_any(everything(), is.na))
+unique(ddu$act)
+ddu %>% 
+  mutate(act=sjmisc::rec(act, rec="lo:40=B; 41:80=M; else=NA")) %>% 
+  ggscatter(x="act", y="delivered_dose")
+  
+ddu %>% 
+  unite("sample",product_type,device_batch, remove = FALSE) %>% 
+  ggplot(aes(x=sample, y=delivered_dose, color=product_type))+
+  geom_point()+
+  geom_hline(aes(yintercept=80*0.75), color="Red") +  #75~125%
+  geom_hline(aes(yintercept=80*1.25), color="Red")+
+  geom_hline(aes(yintercept=80*0.8), color="grey10") +  #75~125%
+  geom_hline(aes(yintercept=80*1.2), color="grey10")+
+  geom_hline(aes(yintercept=80), linetype="dashed")+
+  theme_lucid(axis.text.angle =90, legend.position = "right")+
+  coord_flip()
+
+#################
+df=read_clip_tbl()
+colnames(df)
+df %>% 
+  ggplot(aes(Device, Delivered_Dose_μg, color=Device))+
+  geom_point(size=2.5)+
+  geom_hline(aes(yintercept=80*0.75), color="Red") +  #75~125%
+  geom_hline(aes(yintercept=80*1.25), color="Red")+
+  theme_lucid(axis.text.angle =45, legend.position = "right")
+
+df %>% 
+  ggplot(aes(Device, Shot_weight.mg., color=Device))+
+  geom_point(size=2.5)+
+  geom_hline(aes(yintercept=59*0.85), color="Red") +  #75~125%
+  geom_hline(aes(yintercept=59*1.15), color="Red")+
+  theme_lucid(axis.text.angle =45, legend.position = "right")
+
+df %>% 
+  group_by(Device) %>% 
+  summarise( n=n(),means=mean(Delivered_Dose_μg), sds=sd(Delivered_Dose_μg)) 
+
+
+df2=df %>% convert_as_factor(Device) %>% filter(is.na(Note))
+
+apsd_plotdata(df2, 8,17) %>% 
+  ggplot(aes(x=location, y=amount, color=Device))+
+  facet_wrap(~Device)+
+  geom_point()+
+  geom_line(aes(group=test.id))+
+  labs(x="location")+
+  theme_lucid(axis.text.angle =45, legend.position = "right")
+
+df %>% 
+  convert_as_factor(Device) %>% 
+  filter(is.na(Note)) %>% 
+ ggbarplot(x="Device", y="C_MMAD..μm.", fill="Device", add = "mean_sd")+
+  theme_lucid(axis.text.angle =45, legend.position = "right")

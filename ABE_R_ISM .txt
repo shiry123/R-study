@@ -1,0 +1,55 @@
+ABE=function(RLD,TEST,logData=FALSE){
+  library(gridExtra)
+  ###delete null columns
+  #RLD <- RLD[,colSums(is.na(RLD))!= nrow(RLD),drop=F]
+  #TEST <- TEST[,colSums(is.na(TEST))!= nrow(TEST),drop=F]
+  ###delete null rows
+  RLD<-na.omit(as.data.frame(RLD))
+  TEST<-na.omit(as.data.frame(TEST))
+  alpha=0.1
+  
+  ##ensure the data is logged, make RLD and TEST data ready for calculation
+  if(isFALSE(logData)){
+    RLDready = log(RLD)
+    TESTready = log(TEST)
+  } else {
+    RLDready = RLD
+    TESTready = TEST
+  }
+  
+  ##calculate meanT and meanR
+  nt<-length(rownames(TEST))
+  nr<-length(rownames(RLD))
+  meant<-mean(c(as.matrix(TESTready)))
+  meanr<-mean(c(as.matrix(RLDready)))
+  vart <- var(apply(TESTready,1,mean))
+  varr <- var(apply(RLDready,1,mean))
+  
+  
+  # 计算合并方差 (Pooled Variance)
+  pooledvar <- ((nt - 1) * vart + (nr - 1) * varr) / (nt + nr - 2)
+  # 计算自由度
+  df <- nt+nr-2
+  # 计算 t 分位数
+  t_value <- qt(1-alpha/2, df)  # 95% 置信区间，双尾
+  # 计算置信区间
+  ci_lower <- 100*exp((meant - meanr) - t_value*sqrt(pooledvar)*sqrt(1/nt+1/nr))
+  ci_upper <- 100*exp((meant - meanr) + t_value*sqrt(pooledvar)*sqrt(1/nt+1/nr))
+  ###conclusion
+  if (ci_lower>85&ci_upper<117.65){
+    Result=c("Pass")
+  }else{
+    Result=c("Fail")
+  }
+  Output=format(data.frame(ci_lower,ci_upper,Result),justify="left")
+  options(scipen=200)
+  do.call(grid.arrange,c(list(tableGrob(Output)),ncol=1))
+  T;
+}
+
+require(gridExtra)
+
+
+RLD<-dataset[dataset$Type=="RLD",]$ISM
+TEST<-dataset[dataset$Type!="RLD",]$ISM
+ABE(RLD,TEST)

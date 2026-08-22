@@ -1,0 +1,375 @@
+###calculate PBE
+###select data,first RLD then TEST, logData means when we use logged data or not
+PBE = function(RLD,TEST,logData=FALSE){
+  library(gridExtra)
+  
+  RLD<-na.omit(as.matrix(RLD))
+  TEST<-na.omit(as.matrix(TEST))
+  
+  sigmaT0=0.1
+  thetap=2.0891
+  alpha=0.05
+  m=ncol(RLD)  # B\M\E
+  
+  if(m != ncol(TEST)){
+    stop("RLD and TEST data is unbalance")
+  }
+  
+  ##ensure the data is logged, make RLD and TEST data ready for calculation
+  if(isFALSE(logData)){
+    RLDready = log(RLD)
+    TESTready = log(TEST)
+  } else {
+    RLDready = RLD
+    TESTready = TEST
+  }
+  
+  ##calculate MSB and MSW
+  MSB_MSW=function(x){
+    if(m==1){
+      MSB=sum((x-mean(c(as.matrix(x))))^2)/(nrow(x)-1) ##calculate MSB while m=1
+      MSW=0
+    }else{
+      MSB=m*sum((apply(x,1,mean)-mean(c(as.matrix(x))))^2)/(nrow(x)-1)  
+      ##calculate MSB while m>1, first calculate bottle mean, then total mean, then the sum of square of the difference
+      MSW=sum((x-apply(x,1,mean))^2)/(nrow(x)*(m-1))
+      ##calculate MSW, which only appears when m>2, first calculate bottle mean-each bottle, then sum of square of te difference 
+    }
+    return(cbind(MSB,MSW))
+  }
+  
+  ##calculate sigmaR and sigmaT
+  MSBR=MSB_MSW(RLDready)[1]
+  MSBT=MSB_MSW(TESTready)[1]
+  MSWR=MSB_MSW(RLDready)[2]
+  MSWT=MSB_MSW(TESTready)[2]
+  
+  ##Point estimate  
+  if(m==1){
+    E2=0
+    E4s=0
+    E4c= 0
+  }else{
+    E2=(m-1)*MSWT/m
+    E4s= -(1+thetap)*(m-1)*MSWR/m
+    E4c=-(m-1)*MSWR/m
+  }
+  ############Reference-scale
+  Ed=(mean(c(as.matrix(RLDready)))-mean(c(as.matrix(TESTready))))^2
+  E1= MSBT/m
+  E3s= -(1+thetap)*MSBR/m
+  Eq1=sum(c(Ed,E1,E2,E3s,E4s))
+  ############Constant-scale  
+  E3c= -MSBR/m
+  Eq2= sum(c(Ed,E1,E2,E3c,E4c,-thetap*sigmaT0^2))
+  
+  ##Confidence Bound and Uq
+  if(m==1){
+    H2= 0
+    H4s= 0
+    H4c= 0
+    U2= 0
+    U4s= 0
+    U4c= 0
+  }else{
+    H2=  nrow(TESTready)*(m-1)*E2/qchisq(alpha, nrow(TESTready)*(m-1))
+    H4s= nrow(RLDready)*(m-1)*E4s/qchisq(1-alpha, nrow(RLDready)*(m-1))
+    H4c= nrow(RLDready)*(m-1)*E4c/qchisq(1-alpha, nrow(RLDready)*(m-1))
+    U2= (H2-E2)^2
+    U4s= (H4s-E4s)^2 
+    U4c= (H4c-E4c)^2
+  }
+  ############Reference-scale
+  Hd=(abs(mean(c(as.matrix(RLDready))) - mean(c(as.matrix(TESTready))))+
+        qt(1-alpha, nrow(TESTready) + nrow(RLDready) - 2)*
+        sqrt(MSBT/(nrow(TESTready)*m)+MSBR/(nrow(RLDready)*m)))^2
+  H1= (nrow(TESTready)-1)*E1/qchisq(alpha, nrow(TESTready)-1)
+  H3s= (nrow(RLDready)-1)*E3s/qchisq(1-alpha, nrow(RLDready)-1)
+  Ud= (Hd-Ed)^2
+  U1= (H1-E1)^2
+  U3s= (H3s-E3s)^2
+  ############Constant-scale  
+  H3c= (nrow(RLDready)-1)*E3c/qchisq(1-alpha, nrow(RLDready)-1)
+  U3c= (H3c-E3c)^2
+  
+  # Reference-scaled
+  Uq1= sum(c(Ud,U1,U2,U3s,U4s))
+  # Constant-scaled
+  Uq2= sum(c(Ud,U1,U2,U3c,U4c))
+  
+  #H value
+  Hn1= Eq1+sqrt(Uq1)
+  Hn2= Eq2+sqrt(Uq2)
+  
+  ###conclusion
+  sigmar=sqrt(MSBR/m+(m-1)*MSWR/m)
+  sigmat=sqrt(MSBT/m+(m-1)*MSWT/m)
+  SigmaR=c(sigmar,"Hn","Result")
+  if (sigmar>0.1&Hn1<0){
+    Reference=c("Y",Hn1,"Pass")
+    Constant=c("N",Hn2,"")
+  }else if(sigmar<0.1&Hn2<0){
+    Reference=c("N",Hn1,"")
+    Constant=c("Y",Hn2,"Pass")
+  }else if(sigmar>0.1&Hn1>0){
+    Reference=c("Y",Hn1,"Not Pass")
+    Constant=c("N",Hn2,"")
+  }else{
+    Reference=c("N",Hn1,"")
+    Constant=c("Y",Hn2,"Not Pass")
+  }
+  
+  #summarise all data in one table
+  R_Eq_intermediate_parameters=c(paste("Ed=",Ed),
+                                 paste("E1=",E1),
+                                 paste("E2=",E2),
+                                 paste("E3s=",E3s),
+                                 paste("E4s=",E4s),
+                                 paste("Eq(linearized point estimate)=",Eq1))
+  R_Hq_intermediate_parameters=c(paste("Hd=",Hd),
+                                 paste("H1=",H1),
+                                 paste("H2=",H2),
+                                 paste("H3s=",H3s),
+                                 paste("H4s=",H4s),"")
+  R_Uq_intermediate_parameters=c(paste("Ud=",Ud),
+                                 paste("U1=",U1),
+                                 paste("U2=",U2),
+                                 paste("U3s=",U3s),
+                                 paste("U4s=",U4s),
+                                 paste("Uq=(Hq-Eq)^2=",Uq1))
+  R_Hn=c(rep("",5),paste("H1=",Hn1))
+  
+  C_Eq_intermediate_parameters=c(paste("Ed=",Ed),
+                                 paste("E1=",E1),
+                                 paste("E2=",E2),
+                                 paste("E3c=",E3c),
+                                 paste("E4c=",E4c),
+                                 paste("Eq(linearized point estimate)=",Eq2))
+  C_Hq_intermediate_parameters=c(paste("Hd=",Hd),
+                                 paste("H1=",H1),
+                                 paste("H2=",H2),
+                                 paste("H3c=",H3c),
+                                 paste("H4c=",H4c),"")
+  C_Uq_intermediate_parameters=c(paste("Ud=",Ud),
+                                 paste("U1=",U1),
+                                 paste("U2=",U2),
+                                 paste("U3c=",U3c),
+                                 paste("U4c=",U4c),
+                                 paste("Uq=(Hq-Eq)^2=",Uq2))
+  C_Hn=c(rep("",5),paste("H2=",Hn2))
+  
+  Reference_scale=format(data.frame(R_Eq_intermediate_parameters,
+                                    R_Hq_intermediate_parameters,
+                                    R_Uq_intermediate_parameters,
+                                    R_Hn),
+                         justify="left")
+  Constant_scale=format(data.frame(C_Eq_intermediate_parameters,
+                                   C_Hq_intermediate_parameters,
+                                   C_Uq_intermediate_parameters,
+                                   C_Hn),
+                        justify="left")
+  Conclusion=format(data.frame(SigmaR,Reference,Constant))
+  
+  options(scipen=200)
+  do.call(grid.arrange,
+          c(list(tableGrob(Reference_scale),tableGrob(Constant_scale),tableGrob(Conclusion)),ncol=1))
+  print(Conclusion)
+}
+
+####################################################
+getwd()
+setwd("D:/Mywd")
+df=import("rawdata/other/PBE-Analysis.xlsx", sheet ="data")
+sample_n(df,10)   #宽数据
+df %>% filter(Product =="R") %>%  select(B,M,E)
+RLD = subset(df, Product =="R", 4:6)
+TEST= subset(df, Product =="T", 4:6)
+source("script/PBE.R")
+PBE(RLD, TEST)
+
+####################### 布地奈德指南数据计算
+df=import("rawdata/other/PBE-Analysis.xlsx", sheet ="data2")
+sample_n(df, 10)
+df %>% 
+  group_by(Product) %>% 
+  summarise(GM=exp(mean(logFPD)))
+df.wider=df %>% 
+  pivot_wider(names_from = "Stage", values_from = "logFPD")
+df.wider
+table(df.wider$Product)
+unique(df.wider$Product)
+
+source("script/PBE.R")
+RLD = df.wider %>% filter(Product =="REF") %>%  select(B,M,E)
+TEST= df.wider %>% filter(Product =="TEST") %>%  select(B,M,E)
+PBE(RLD, TEST, logData=TRUE)
+
+#####################################################
+dataR=df.wider %>% filter(Product == "REF") %>% select(B,M,E)
+subset(df.wider,
+       B>5,  # 选择条件
+       select = c(B,M,E))
+dataR
+transform(dataR, myvar = apply(dataR,1,mean))
+transform(dataR, myvar = c(0,1))
+nrow(dataR)
+apply(dataR,1,mean)  # row mean
+rowMeans(dataR)
+apply(dataR, 2, mean) #col mean
+colMeans(dataR)
+mean(as.matrix(dataR))
+lapply(dataR, \(x) mean(x, na.rm=TRUE))
+sapply(dataR, mean)
+
+
+################################################
+# # subject：受试者ID（因子）
+# treatment：处理（因子，水平为"R"和"T"）
+# period：周期（数值或因子）
+# sequence：序列（因子）
+# response：药代动力学参数（如AUC）
+
+n_subjects <- 24  # 受试者数量
+n_periods <- 2    # 周期数
+
+# 创建交叉设计数据结构
+data <- expand.grid(
+  subject = factor(1:n_subjects),
+  period = 1:n_periods
+)
+
+# 随机分配序列（RT或TR）
+data$sequence <- ifelse(data$subject %in% 1:(n_subjects/2), "RT", "TR")
+
+# 根据序列和周期分配处理
+data$treatment <- ifelse(
+  (data$sequence == "RT" & data$period == 1) | 
+    (data$sequence == "TR" & data$period == 2),
+  "R", "T"
+)
+
+# 生成受试者随机效应（tau ~ N(0, 0.3^2)）
+tau <- rnorm(n_subjects, mean = 0, sd = 0.3)
+names(tau) <- levels(data$subject)
+
+# 生成响应变量（添加周期效应、处理效应和异方差误差）
+data$response <- with(data, 
+                      tau[as.character(subject)] +           # 受试者间变异
+                        0.1 * (period - 1) +                   # 周期效应（0.1） 
+                        ifelse(treatment == "T", 0.05, 0) +    # 处理效应（T比R高0.05）
+                        rnorm(nrow(data), sd = ifelse(treatment == "R", 1, 1.5))  # 异方差误差
+)
+
+# 查看数据结构
+head(data)
+
+# 允许处理组间残差异方差
+library(nlme)
+model <- lme(
+  response ~ treatment + period + sequence,
+  random = ~1 | subject,
+  data = data,
+  weights = varIdent(form = ~1 | treatment),  # 处理组异方差
+  control = lmeControl(opt = "nlminb")  # 改进优化算法
+)
+
+# 查看模型摘要
+summary(model)
+VarCorr(model)
+model$modelStruct
+
+emm=emmeans(model, ~ treatment)
+emm
+
+mu <- summary(emm)$emmean
+mu_R <- mu[1]
+mu_T <- mu[2]  # 假设顺序为R, T
+
+# 提取随机效应方差（受试者间）
+tau2 <- as.numeric(VarCorr(model)[1, "Variance"])
+tau2
+# 提取残差方差参数
+var_struct <- model$modelStruct$varStruct
+var_struct
+s <- coef(var_struct, unconstrained = FALSE)
+s
+sigma_R <- sigma(model)
+sigma_T <- sigma_R * s["T"]
+
+# 计算总方差
+sigma2_R_total <- tau2 + sigma_R^2
+sigma2_T_total <- tau2 + sigma_T^2
+
+# 计算PBE指标θ_p
+numerator <- (mu_T - mu_R)^2 + (sigma2_T_total - sigma2_R_total)
+theta_p <- numerator / sigma2_R_total
+theta_p
+
+plot(model, which = 1)  # 残差 vs 预测值
+shapiro.test(resid(model))
+# qqnorm(resid(model))
+# qqline(resid(model))
+library(car)
+car::qqPlot(resid(model), main="qq plot", col="blue", col.lines="red")
+
+
+##########
+boot_pbe <- function(data, indices) {
+  d <- data[indices, ]
+  
+  # 拟合混合模型，允许不同处理的残差异方差
+  model <- try({
+    lme(response ~ treatment + period + sequence,
+        random = ~1 | subject,
+        data = d,
+        weights = varIdent(form = ~1 | treatment),
+        control = lmeControl(msMaxIter = 100, msMaxEval = 100))
+  }, silent = TRUE)
+  
+  if (inherits(model, "try-error")) return(NA)
+  
+  # 计算处理边际均值
+  emm <- try(emmeans(model, ~treatment), silent = TRUE)
+  if (inherits(emm, "try-error")) return(NA)
+  
+  mu <- summary(emm)$emmean
+  mu_R <- mu[1]
+  mu_T <- mu[2]  # 假设顺序为R, T
+  
+  # 提取随机效应方差（受试者间）
+  tau2 <- as.numeric(VarCorr(model)[1, "Variance"])
+  
+  # 提取残差方差参数
+  var_struct <- model$modelStruct$varStruct
+  s <- coef(var_struct, unconstrained = FALSE)
+  sigma_R <- sigma(model)
+  sigma_T <- sigma_R * s["T"]
+  
+  # 计算总方差
+  sigma2_R_total <- tau2 + sigma_R^2
+  sigma2_T_total <- tau2 + sigma_T^2
+  
+  # 计算PBE指标θ_p
+  numerator <- (mu_T - mu_R)^2 + (sigma2_T_total - sigma2_R_total)
+  theta_p <- numerator / sigma2_R_total
+  
+  return(theta_p)
+}
+library(boot)
+boot_results <- boot(data = data, statistic = boot_pbe, R = 500)
+boot_results$t0
+# 计算95% CI
+boot_ci <- boot.ci(boot_results, type = "perc")
+boot_ci$percent
+print(boot_ci)
+
+# 输出结果
+cat("PBE指标估计值:", boot_results$t0, "\n")
+cat("95% 置信区间:", boot_ci$percent[4:5], "\n")
+
+# 判断是否满足PBE（假设θ_p=0.01）
+if (boot_ci$percent[5] <= 0.01) {
+  cat("结论：满足群体生物等效性（PBE）。")
+} else {
+  cat("结论：不满足群体生物等效性（PBE）。")
+}

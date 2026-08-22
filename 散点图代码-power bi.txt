@@ -1,0 +1,31 @@
+########## 安装R包
+install.packages("ggpubr")
+
+######################################################
+library(ggpubr)
+df_names=colnames(dataset)
+n=length(df_names)
+if (n > 3) {
+  color_val=df_names[3]
+  facet_val=df_names[4:n]
+} else if (n == 3) {
+  color_val=df_names[3]
+  facet_val=NULL
+} else {
+  color_val="black"
+  facet_val=NULL
+}
+ggscatter(dataset, x=df_names[1], y=df_names[2], 
+          color=color_val,facet.by =facet_val, 
+          position=position_dodge(0.5), 
+          palette = "jco",size = 3)+
+  theme_bw() +
+  theme(plot.title = element_text(size = 12, face = "bold"),
+        axis.text=element_text(size=10, face = "bold"),
+        axis.title.x=element_text(size=10),
+        axis.title.y=element_text(size=10),
+        legend.text=element_text(size=10),
+        legend.position="top",
+        axis.line=element_line(colour="black", linewidth=0.6),
+        axis.ticks=element_line(colour="black", linewidth=0.6),
+        axis.text.x = element_text(angle =0, vjust =0.2))

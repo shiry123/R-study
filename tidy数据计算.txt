@@ -1,0 +1,75 @@
+################################################################################
+df=read.table("clipboard",header=F, sep="\t")
+
+mtcars %>% 
+  mutate(across(c(hp,wt), scale, .names = "{.col}_s"))
+mtcars %>% update_columns(c("hp","wt"), scale)
+mtcars %>% 
+  update_columns(c("hp","wt"), \(x) scale(x, center = F)) %>% 
+  update_columns("vs", as.factor)
+df = tibble(x1 = 1:6, x2 = 5:10, x3 = 9:14, 
+             x=c(4,5,7,NA,8,10), y=c(5,4,3,NA,6,7), z=c(5,7,NA,8,5,4),
+             grp=rep(c("A","B"), each=3))
+df
+
+source("script/data_calc.R")  
+data_calc(df, cols=x:y, func=mean)
+
+df %>% group_by(grp) %>% 
+  get_summary_stats(x:z, type="mean_sd")
+
+df %>%
+  mutate(across(c(x, y), ~ .x * 2))
+df %>%
+  summarize(across(where(is.numeric), ~ mean(.x)),
+            .by = z)
+df %>%
+  arrange(across(c(y, z)))
+
+df %>%
+  mutate(
+    across(c(x, y), ~ paste0(cur_column(), .x))
+  )
+#################################
+df %>% 
+  mutate(mu=pmap_dbl(pick(x:y), \(...) mean(c(...), na.rm=TRUE)))
+df %>% 
+  rowwise() %>% 
+  mutate(mu=mean(c_across(x:y), na.rm=TRUE))
+
+#######################
+df %>% group_by(grp) %>% 
+  data_calc(cols=x:y, func=mean)
+data_calc(df, cols=x:y, func=mean, by=grp)
+
+df %>% 
+  group_by(grp) %>% 
+  summarise(across(x:z, \(x) mean(x, na.rm = TRUE)) )
+
+data_calc(df, cols=x:z, func=list(mean,sd), by=grp)
+
+df %>% 
+  group_by(grp) %>% 
+  summarise(across(x:z, list(f1=\(x) mean(x, na.rm = TRUE),
+                             f2=\(x) sd(x, na.rm = TRUE))) )
+df %>% 
+  mutate(mu=pmap_dbl(pick(x:z), ~mean(c(...), na.rm=TRUE)))
+df %>% 
+  mutate(mu=pmap_dbl(list(x,y,z), \(...) mean(c(...), na.rm=TRUE)))
+df %>%
+  mutate(
+    across(x, list(f1 = ~ .x * 2, f2 = ~ .x^2))
+  )
+df %>%
+  mutate(x.f1=x*2,  x.f2=x.f1^2)
+df %>%
+  mutate(
+    across(x1:x3, list(f1 = \(x) x*2, f2 =\(x) x^2))
+  )
+df %>% 
+  group_by(grp) %>% 
+  summarise(
+    n=n(),
+    across(x:z, list(mean= ~mean(.x, na.rm=TRUE),
+                     sd= ~sd(.x, na.rm=TRUE)), .names = "{.col}_{.fn}")
+  )

@@ -1,0 +1,214 @@
+library(shiny)
+library(readxl)
+library(DT)
+library(drc)
+library(writexl)
+
+# ==========================================
+# 1. 定义计算函数 (保持不变)
+# ==========================================
+calculate_drc_metrics <- function(conc, resp) {
+  # 1. 数据预处理：合并并清洗 NA
+  df_clean <- data.frame(
+    conc = suppressWarnings(as.numeric(conc)),
+    resp = suppressWarnings(as.numeric(resp))
+  )
+    # 关键步骤：只保留两列都完整的行
+  df_clean <- df_clean[complete.cases(df_clean), ]
+  
+    # 2. 检查样本量 (LL.4 至少需要 4 个有效点)
+  if (nrow(df_clean) < 4) {
+    return(c(EC50 = NA_real_, R2 = NA_real_))
+  }
+  
+  # 3. 拟合模型
+  fit <- try(drc::drm(resp ~ conc, data = df_clean, fct = LL.4()), silent = TRUE)
+  
+  # 如果拟合失败，直接返回 NA，避免后续维度错误
+  if (inherits(fit, "try-error")) {
+    return(c(EC50 = NA_real_, R2 = NA_real_))
+  }
+  
+  # 4. 计算 EC50
+  ec50_val <- try(drc::ED(fit, 50, display = FALSE)[1], silent = TRUE)
+  ec50_out <- ifelse(inherits(ec50_val, "try-error"), NA_real_, as.numeric(ec50_val))
+  
+  # 5. 计算 R² (修复维度不匹配的关键点)
+  # 必须使用 df_clean$resp (已清洗) 和 predict(fit) (基于清洗数据生成)
+  # 这样保证了两个向量长度绝对一致
+  pred_val <- predict(fit)
+  r2_val <- cor(df_clean$resp, pred_val)^2
+  
+  return(c(EC50 = ec50_out, R2 = r2_val))
+}
+
+# ==========================================
+# 2. UI 界面设计 (增加了下载按钮)
+# ==========================================
+ui <- fluidPage(
+  titlePanel("DRC 分析工具 (支持多响应列 & 导出)"),
+  sidebarLayout(
+    sidebarPanel(
+      h4("1. 数据导入"),
+      fileInput("excel_file", "上传 Excel 文件", accept = c(".xlsx", ".xls")),
+      uiOutput("sheet_selector"),
+      actionButton("load_data_btn", "加载数据", class = "btn-primary"),
+      hr(),
+      h4("2. 参数设置"),
+      selectizeInput("col_conc", "浓度列 (Conc)", choices = NULL),
+      selectizeInput("col_resp", "响应值列 (Response - 可多选)", 
+                     choices = NULL, multiple = TRUE),
+      selectizeInput("group_cols", "分组变量 (可多选)", 
+                     choices = NULL, multiple = TRUE),
+      hr(),
+      actionButton("calc_btn", "开始计算", class = "btn-success btn-lg", width = "100%"),
+      # 【新增】下载按钮
+      hr(),
+      downloadButton("download_results", "📥 导出计算结果 (Excel)", class = "btn-info")
+    ),
+    mainPanel(
+      tabsetPanel(
+        tabPanel("计算结果", DTOutput("results_table")),
+        tabPanel("原始数据预览", DTOutput("raw_preview"))
+      )
+    )
+  )
+)
+
+# ==========================================
+# 3. Server 逻辑处理 (增加了导出逻辑)
+# ==========================================
+server <- function(input, output, session) {
+  
+  # --- 数据读取与初始化 ---
+  raw_data <- reactiveVal(NULL)
+  
+  observeEvent(input$load_data_btn, {
+    req(input$excel_file)
+    sheet <- input$sheet_selector %||% excel_sheets(input$excel_file$datapath)[1]
+    df <- tryCatch({
+      read_excel(input$excel_file$datapath, sheet = sheet)
+    }, error = function(e) {
+      showNotification(paste("读取失败:", e$message), type = "error")
+      NULL
+    })
+    if (!is.null(df)) {
+      raw_data(df)
+      col_names <- names(df)
+      updateSelectizeInput(session, "col_conc", choices = col_names, selected = col_names[1])
+      updateSelectizeInput(session, "col_resp", choices = col_names, selected = col_names[2])
+      updateSelectizeInput(session, "group_cols", choices = col_names, server = TRUE)
+      output$raw_preview <- renderDT({ datatable(df, options = list(scrollX = TRUE)) })
+    }
+  })
+  
+  # 动态生成 Sheet 选择器
+  output$sheet_selector <- renderUI({
+    req(input$excel_file)
+    sheets <- excel_sheets(input$excel_file$datapath)
+    selectInput("sheet_selector", "选择工作表", choices = sheets)
+  })
+  
+  # --- 核心计算逻辑 (保持不变)---
+  results_df <- eventReactive(input$calc_btn, {
+    req(raw_data(), input$col_conc, input$col_resp)
+    df <- raw_data()
+    conc_col <- input$col_conc
+    resp_cols <- input$col_resp
+    group_vars <- input$group_cols
+    
+    # 基础检查
+    if (!conc_col %in% names(df)) {
+      showNotification("请确保已选择有效的浓度列", type = "error")
+      return(NULL)
+    }
+    if (!all(resp_cols %in% names(df))) {
+      showNotification("部分选择的响应值列不存在", type = "error")
+      return(NULL)
+    }
+    
+    all_results_list <- list()
+    
+    # 遍历每一个选中的响应值列
+    for (current_resp in resp_cols) {
+      if (length(group_vars) == 0) {
+        split_list <- list("All_Data" = df)
+        is_grouped <- FALSE
+      } else {
+        missing_groups <- setdiff(group_vars, names(df))
+        if (length(missing_groups) > 0) {
+          showNotification(paste("以下分组列不存在:", paste(missing_groups, collapse = ", ")), type = "error")
+          return(NULL)
+        }
+        groups <- interaction(df[group_vars], drop = TRUE, sep = "_")
+        split_list <- split(df, groups)
+        is_grouped <- TRUE
+      }
+      
+      res_list <- lapply(names(split_list), function(g_name) {
+        sub_df <- split_list[[g_name]]
+        c_vec <- as.numeric(sub_df[[conc_col]])
+        r_vec <- as.numeric(sub_df[[current_resp]])
+        
+        metrics <- calculate_drc_metrics(c_vec, r_vec)
+        
+        row_data <- list(
+          Response_ID = current_resp,
+          Group_Info = g_name,
+          N_Points = nrow(sub_df),
+          EC50 = metrics["EC50"],
+          R_Squared = metrics["R2"]
+        )
+        
+        if (is_grouped) {
+          group_values <- as.list(sub_df[1, group_vars, drop = FALSE])
+          c(group_values, row_data)
+        } else {
+          row_data
+        }
+      })
+      
+      all_results_list <- c(all_results_list, res_list)
+    }
+    
+    final_res <- do.call(rbind.data.frame, all_results_list)
+    final_res$EC50 <- round(as.numeric(final_res$EC50), 4)
+    final_res$R_Squared <- round(as.numeric(final_res$R_Squared), 4)
+    final_res$Status <- ifelse(is.na(final_res$EC50), "❌ 拟合失败", "✅ 成功")
+    
+    return(final_res)
+  })
+  
+  # --- 渲染结果表格 ---
+  output$results_table <- renderDT({
+    req(results_df())
+    df <- results_df()
+    datatable(df, options = list(pageLength = 15, scrollX = TRUE), rownames = FALSE) %>%
+      formatStyle(
+        'Status',
+        target = 'row',
+        backgroundColor = styleEqual(c('❌ 拟合失败', '✅ 成功'), c('#ffcccc', '#ccffcc'))
+      )
+  })
+  
+  # --- 【新增】导出结果逻辑 ---
+  output$download_results <- downloadHandler(
+    # 文件名包含当前时间，防止覆盖
+    filename = function() {
+      paste0("DRC_分析结果_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".xlsx")
+    },
+    content = function(file) {
+      # 获取计算结果
+      res <- results_df()
+      if (is.null(res)) {
+        # 如果没有结果，导出一个提示表
+        res <- data.frame(Message = "尚未进行计算或计算无结果，请先点击【开始计算】。")
+      }
+      # 使用 writexl 写入 Excel
+      # 这里使用 list 传入多个 sheet (虽然目前只有一个)
+      writexl::write_xlsx(list("分析结果" = res), path = file)
+    }
+  )
+}
+
+shinyApp(ui, server)

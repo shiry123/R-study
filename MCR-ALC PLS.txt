@@ -1,0 +1,321 @@
+# install.packages("caret", dependencies = TRUE)
+
+library(caret)     # 机器学习工具
+index <- createDataPartition(iris$Species, p = 0.7, list = FALSE)
+train_data <- iris[index,]
+train_data
+test_data <- iris[-index,]
+library(randomForest)
+rf_model <- randomForest(Species ~ ., data = train_data, importance = TRUE)
+# 提取变量重要性
+importance <- varImp(rf_model)
+# 查看变量重要性
+print(importance)
+# 可视化变量重要性
+plot(importance)
+
+# 设置训练控制参数
+control <- trainControl(
+  method = "cv",          # 交叉验证
+  number = 5,             # 5 折
+  verboseIter = TRUE,     # 显示训练过程
+  savePredictions = "final",  # 保存预测结果
+  classProbs = TRUE,      # 计算分类概率
+  summaryFunction = multiClassSummary  # 多分类评估
+)
+# 训练随机森林模型
+rf_model <- train(
+  Species ~ ., 
+  data = train_data, 
+  method = "rf", 
+  trControl = control,
+  tuneLength = 3
+)
+# 查看结果
+print(rf_model)
+# 绘制调优结果
+plot(rf_model)
+# 混淆矩阵
+predictions=predict(rf_model, test_data)
+confusionMatrix(predictions, test_data$Species)
+
+
+########################################################################################
+library(pls)       # PLS回归
+library(ALS)       # 交替最小二乘法
+library(caret)     # 机器学习工具
+library(mdatools)
+
+data("carbs")
+str(carbs$S)
+par(mfrow=c(2,1))
+matplot(carbs$S, type = "l")
+matplot(t(carbs$D), type = "l")
+
+# 创建数据框   行是混合样品数， 前3列是 3个组分的配比  然后测定的光谱
+data_df <- data.frame(
+  Comp1 = carbs$C[,1],
+  Comp2 = carbs$C[,2],
+  Comp3 = carbs$C[,3],
+  Spectra = I(carbs$D)
+)
+str(data_df)
+
+# 分割训练集和测试集
+train_idx <- createDataPartition(1:nrow(data_df), p=0.7, list=FALSE)
+train_data <- data_df[train_idx, ]
+test_data <- data_df[-train_idx, ]
+
+# PLS回归 - 对每个组分单独建模
+pls_model_comp1 <- plsr(Comp1 ~ Spectra, ncomp=10, 
+                        data=train_data, validation="CV")
+pls_model_comp2 <- plsr(Comp2 ~ Spectra, ncomp=10, 
+                        data=train_data, validation="CV")
+pls_model_comp3 <- plsr(Comp3 ~ Spectra, ncomp=10, 
+                        data=train_data, validation="CV")
+# 选择最优主成分数
+optimal_comp1 <- selectNcomp(pls_model_comp1, method="onesigma", plot=TRUE)
+optimal_comp2 <- selectNcomp(pls_model_comp2, method="onesigma", plot=TRUE)
+optimal_comp3 <- selectNcomp(pls_model_comp3, method="onesigma", plot=TRUE)
+# 用最优主成分数重新建模
+pls_final_comp1 <- plsr(Comp1 ~ Spectra, ncomp=optimal_comp1, 
+                        data=train_data)
+summary(pls_final_comp1)
+pls_final_comp2 <- plsr(Comp2 ~ Spectra, ncomp=optimal_comp2, 
+                        data=train_data)
+pls_final_comp3 <- plsr(Comp3 ~ Spectra, ncomp=optimal_comp3, 
+                        data=train_data)
+# 模型评估
+predict_comp1 <- predict(pls_final_comp1, newdata=test_data$Spectra)
+predict_comp1
+predict_comp2 <- predict(pls_final_comp2, newdata=test_data$Spectra)
+predict_comp3 <- predict(pls_final_comp3, newdata=test_data$Spectra)
+# 计算统计指标
+calculate_metrics <- function(true, pred) {
+  rmse <- sqrt(mean((true - pred)^2))
+  r2 <- cor(true, pred)^2
+  bias <- mean(pred - true)
+  list(RMSE=rmse, R2=r2, Bias=bias)
+}
+metrics_comp1 <- calculate_metrics(test_data$Comp1, predict_comp1[,,2])
+metrics_comp2 <- calculate_metrics(test_data$Comp2, predict_comp2[,,2])
+metrics_comp3 <- calculate_metrics(test_data$Comp3, predict_comp3[,,2])
+# 打印结果
+print("PLS模型性能:")
+print(paste("组分1 - RMSE:", round(metrics_comp1$RMSE,4), 
+            "R²:", round(metrics_comp1$R2,4)))
+print(paste("组分2 - RMSE:", round(metrics_comp2$RMSE,4), 
+            "R²:", round(metrics_comp2$R2,4)))
+print(paste("组分3 - RMSE:", round(metrics_comp3$RMSE,4), 
+            "R²:", round(metrics_comp3$R2,4)))
+# 可视化预测结果
+par(mfrow=c(1,3))
+plot(test_data$Comp1, predict_comp1[,,2], main="组分1", 
+     xlab="真实值", ylab="预测值", pch=19, col="blue")
+abline(0,1, col="red")
+plot(test_data$Comp2, predict_comp2[,,2], main="组分2", 
+     xlab="真实值", ylab="预测值", pch=19, col="green")
+abline(0,1, col="red")
+plot(test_data$Comp3, predict_comp3[,,2], main="组分3", 
+     xlab="真实值", ylab="预测值", pch=19, col="orange")
+abline(0,1, col="red")
+# 使用PLS模型预测未知样品
+unknown_spectra=carbs$D[1:3,]
+
+predict_unknown_pls <- function(unknown_spectra, pls_models) {
+  predictions <- matrix(0, nrow(unknown_spectra), 3)  # 3组分数
+    # 将光谱数据转换为合适的格式
+  unknown_df <- data.frame(Spectra = I(unknown_spectra))
+    # 预测每个组分
+  predictions[,1] <- predict(pls_models[[1]], newdata=unknown_df)[,,2]  # 使用2组分预测
+  predictions[,2] <- predict(pls_models[[2]], newdata=unknown_df)[,,2]
+  predictions[,3] <- predict(pls_models[[3]], newdata=unknown_df)[,,2]
+    # 归一化（确保和为1）
+  predictions <- t(apply(predictions, 1, function(x) x/sum(x)))
+  colnames(predictions) <- c("Comp1", "Comp2", "Comp3")
+  
+  return(predictions)
+}
+
+pls_models <- list(pls_final_comp1, pls_final_comp2, pls_final_comp3)
+unknown_predictions <- predict_unknown_pls(unknown_spectra, pls_models)
+unknown_predictions
+carbs$C[1:3,]
+
+library(mdatools)
+data("carbs")
+# PLS回归 - 对每个组分单独建模
+pls_model <- pls(carbs$D, carbs$C, ncomp=10,  cv=5)
+summary(pls_model)
+plot(pls_model)
+pls_model$ncomp.selected
+pls_final_model <- pls(carbs$D, carbs$C, ncomp=3,  cv=5)
+
+unknown_spectra=carbs$D[1:3,]
+unknown_pred <- predict(pls_final_model, unknown_spectra)
+unknown_pred$y.pred
+pred_results <- cbind(unknown_pred$y.pred[,,1][,2],
+                      unknown_pred$y.pred[,,2][,2],
+                      unknown_pred$y.pred[,,3][,2])
+round(pred_results, 2)
+carbs$C[1:3,]
+
+################################  MCR-ALS  ##################
+library(mdatools)
+data("carbs")
+# 1. 定义约束
+# 浓度轮廓约束：非负 (浓度不能为负值)
+cont_constraints <- list(constraint("nonneg"))
+# 光谱约束：非负，并进行“面积归一化”(使光谱强度具有可比性)
+spec_constraints <- list(
+  constraint("nonneg"),
+  constraint("norm", params = list(type = "area"))
+)
+
+# 2. 运行MCR-ALS分析
+mcr_model <- mcrals(carbs$D, 
+                    ncomp = 3, # 假定有3个化学组分
+                    cont.constraints = cont_constraints,
+                    spec.constraints = spec_constraints,
+                    max.niter = 100, # 最大迭代次数
+                    tol = 1e-6, # 收敛容差
+                    verbose = TRUE # 显示迭代过程
+)
+# 查看模型摘要
+summary(mcr_model)
+show(mcr_model)
+
+# 解析出的光谱轮廓
+plotSpectra(mcr_model)
+resolved_spectra <- mcr_model$resspec
+
+par(mfrow=c(2,1))
+matplot(carbs$S, type = "l")  # base R
+matplot(resolved_spectra, type = "l")
+
+mdaplotg(mda.t(carbs$S), type = "l")
+mdaplotg(mda.t(resolved_spectra), type = "l")
+
+# 解析出的浓度轮廓 (贡献)
+par(mfrow=c(1,2))
+plotContributions(mcr_model)
+mdaplotg(mda.t(carbs$C), type = "l")  # 原有浓度
+mcr_model$rescont
+
+
+unknown_spectra=carbs$D[1:3,]
+# 预测未知样品
+unknown_pred <- predict(mcr_model, unknown_spectra)
+unknown_pred/10000
+carbs$C[1:3,]
+
+
+
+# 数据S 纯光谱
+D_combined <- mda.rbind(t(carbs$S), carbs$D) # 将纯光谱矩阵与混合光谱矩阵上下拼接
+cont_forced <- matrix(NA, nrow(D_combined), 3)
+cont_forced[1, ] <- c(1, 0, 0) # 第一个是纯组分1
+cont_forced[2, ] <- c(0, 1, 0) # 第二个是纯组分2
+cont_forced[3, ] <- c(0, 0, 1) # 第三个是纯组分3
+
+# 使用带强制值的模型
+mcr_model_forced <- mcrals(D_combined, 
+                           ncomp = 3,
+                           cont.constraints = cont_constraints,
+                           spec.constraints = spec_constraints,
+                           cont.forced = cont_forced,
+                           verbose = TRUE # 显示迭代过程
+)
+
+# 预测时，新的光谱数据需要与训练集在相同条件下测量和处理
+plotSpectra(mcr_model_forced)
+
+
+#############################################################################
+# 定义系数矩阵 (按列填充)
+A <- matrix(c(
+  1, 2, 1,   # x 的系数：1 (eq1), 2 (eq2), 1 (eq3)
+  1, -1, 2,  # y 的系数：1 (eq1), -1 (eq2), 2 (eq3)
+  1, 1, -1   # z 的系数：1 (eq1), 1 (eq2), -1 (eq3)
+), nrow = 3, byrow = FALSE)
+A
+# 定义常数向量
+b <- c(6, 3, 2)
+
+# 求解方程组
+solution <- solve(A, b)
+solution
+# 打印解
+cat("x =", solution[1], "\n")
+cat("y =", solution[2], "\n")
+cat("z =", solution[3], "\n")
+
+library(matlib)
+plotEqn3d(A, b)
+
+A <- matrix(c(
+  87200, 38800, 7100,   
+  32500, 83900, 13200,  
+  11800, 20800, 11530   
+), nrow = 3, byrow = FALSE)
+A 
+b <- c(6, 3, 2)
+solution <- solve(A, b)
+solution
+
+
+
+f <- function(x) 1/4*x[1]^4 + 1/2*x[2]^2 - x[1]*x[2] + x[1] - x[2]
+f(c(0,1))
+
+optim(c(0, 1), f)
+
+f<-function(x) {
+  x^3-2*x^2-3*x+5
+}
+f(2)
+optimize(f,lower=1,upper=5)
+curve(f, 1, 5)
+
+f<-function(x) {
+  y<-100*(x[2]-x[1]^2)^2+(1-x[1])^2
+  y
+}
+nlm(f,c(-1.2,1))
+
+####################################
+fn1=function(x)
+{
+  exp(x[1]*x[2]*x[3]*x[4]*x[5])
+}
+
+eqn1=function(x){
+  z1=x[1]*x[1]+x[2]*x[2]+x[3]*x[3]+x[4]*x[4]+x[5]*x[5]
+  z2=x[2]*x[3]-5*x[4]*x[5]
+  z3=x[1]*x[1]*x[1]+x[2]*x[2]*x[2]
+  return(c(z1,z2,z3))
+}
+
+library(Rsolnp)
+x0 = c(-2, 2, 2, -1, -1)
+powell=solnp(x0, fun = fn1, eqfun = eqn1, eqB = c(10, 0, -1))  # 求解最小值
+powell
+fn1(powell$pars)
+fn1(x0)
+fn1(c(1,1,1,1,1))
+
+
+
+##############################################
+# install.packages("lpSolve")
+# library(lpSolve)
+# 定义线性规划问题
+lp.obj <- c(3, 4) # 目标函数系数
+lp.con <- matrix(c(2, 1, 1, 3), nrow = 2, byrow = TRUE) # 约束条件系数矩阵
+lp.con
+lp.dir <- c("<=", "<=") # 约束条件方向
+lp.rhs <- c(10, 15) # 约束条件右侧常数
+lp.sol <- lp("max", lp.obj, lp.con, lp.dir, lp.rhs)
+# 提取最优解和目标函数值
+lp.sol$solution # 最优解
+lp.sol$objval # 目标函数值

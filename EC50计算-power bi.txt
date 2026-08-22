@@ -1,0 +1,12 @@
+dataset = na.omit(dataset)
+colnames(dataset)=c("conc","response")
+library(drc)
+model <- drm(response ~ conc, data = dataset,  fct = LL.4())
+EC50=round(ED(model,50,interval="delta")[1],5)
+plot(model, bty="l",type="all")
+legend("topleft", 
+       legend =paste0("EC50 =",EC50),
+       bty = "o",
+       bg = "white",
+       cex = 2,
+       text.font = c(2, 1, 1, 1))

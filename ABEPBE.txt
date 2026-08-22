@@ -1,0 +1,198 @@
+library(openxlsx)
+library(dplyr)
+
+library(gridExtra)
+dfa<-read.xlsx("N:/Public/Temporary/Meihan/PowerBI teaching/数据整理/CF037/Power BI-CF037.xlsx",sheet = "APSD")
+dfddu<-read.xlsx("N:/Public/Temporary/Meihan/PowerBI teaching/数据整理/CF037/Power BI-CF037.xlsx",sheet = "DDU")
+
+
+ci_lower<-c(1:5)
+ci_upper<-c(1:5)
+ResultP<-c(1:5) 
+ResultA<-c(1:5) 
+
+dataset
+
+dfa<-filter(dfa,dfa$Batch%in%dataset$Batch&dfa$ingredient%in%dataset$ingredient&dfa$Flow.rate%in%dataset$`flow rate`)
+dfddu<-filter(dfddu,dfddu$Batch%in%dataset$Batch&dfddu$ingredient%in%dataset$ingredient&dfddu$flow.rate%in%dataset$`flow rate`)
+
+
+rl<-max(nrow(filter(dfa,dfa$Type=="RLD")),nrow(filter(dfddu,dfddu$Type=="RLD")))
+Rd<-data.frame(matrix(NA, nrow = rl, ncol = 5))
+tl<-max(nrow(filter(dfa,dfa$Type!="RLD")),nrow(filter(dfddu,dfddu$Type!="RLD")))
+Td<-data.frame(matrix(NA, nrow = tl, ncol = 5))
+
+dfddu$DDU_μg
+Index<-c("ISM","MMAD_μm","FPD_μg","GSD","DDU_μg")
+
+for(i in 1:rl){
+  Rd[c(1:4)][i,]<-filter(dfa,dfa$Type=="RLD")[c("ISM","MMAD_μm","FPD_μg","GSD")][i,]
+  Rd[5][i,]<-filter(dfddu,dfddu$Type=="RLD")["DDU_μg"][i,]
+  
+}
+
+for(i in 1:tl){
+  Td[c(1:4)][i,]<-filter(dfa,dfa$Type!="RLD")[c("ISM","MMAD_μm","FPD_μg","GSD")][i,]
+  Td[5][i,]<-filter(dfddu,dfddu$Type!="RLD")["DDU_μg"][i,]
+ 
+}
+
+
+for (i in 1:5){
+  
+  sigmaT0=0.1
+  thetap=2.0891
+  alpha=0.05
+  m=1
+  
+  ##ensure the data is logged, make RLD and TEST data ready for calculation
+  
+  RLD<-na.omit(Rd[i])
+  TEST<-na.omit(Td[i])
+  Aalpha=0.1
+  
+  ##ensure the data is logged, make RLD and TEST data ready for calculation
+  
+  RLDready = log(RLD)
+  TESTready = log(TEST)
+  
+  
+  
+  
+  
+  ##calculate MSB and MSW
+  MSB_MSW=function(x){
+    if(m==1){
+      MSB=sum((x-mean(c(as.matrix(x))))^2)/(nrow(x)-1) ##calculate MSB while m=1
+      MSW=0
+    }else{
+      MSB=m*sum((apply(x,1,mean)-mean(c(as.matrix(x))))^2)/(nrow(x)-1)  
+      ##calculate MSB while m>1, first calculate bottle mean, then total mean, then the sum of square of the difference
+      MSW=sum((x-apply(x,1,mean))^2)/(nrow(x)*(m-1))
+      ##calculate MSW, which only appears when m>2, first calculate bottle mean-each bottle, then sum of square of the difference 
+    }
+    return(cbind(MSB,MSW))
+  }
+  
+  ##calculate sigmaR and sigmaT
+  MSBR=MSB_MSW(RLDready)[1]
+  MSBT=MSB_MSW(TESTready)[1]
+  MSWR=MSB_MSW(RLDready)[2]
+  MSWT=MSB_MSW(TESTready)[2]
+  
+  ##Point estimate  
+  if(m==1){
+    E2=0
+    E4s=0
+    E4c= 0
+  }else{
+    E2=(m-1)*MSWT/m
+    E4s= -(1+thetap)*(m-1)*MSWR/m
+    E4c=-(m-1)*MSWR/m
+  }
+  ############Reference-scale
+  Ed=(mean(c(as.matrix(RLDready)))-mean(c(as.matrix(TESTready))))^2
+  E1= MSBT/m
+  E3s= -(1+thetap)*MSBR/m
+  Eq1=sum(c(Ed,E1,E2,E3s,E4s))
+  ############Constant-scale  
+  E3c= -MSBR/m
+  Eq2= sum(c(Ed,E1,E2,E3c,E4c,-thetap*sigmaT0^2))
+  
+  ##Confidence Bound and Uq
+  if(m==1){
+    H2= 0
+    H4s= 0
+    H4c= 0
+    U2= 0
+    U4s= 0
+    U4c= 0
+  }else{
+    H2=  nrow(TESTready)*(m-1)*E2/qchisq(alpha, nrow(TESTready)*(m-1))
+    H4s= nrow(RLDready)*(m-1)*E4s/qchisq(1-alpha, nrow(RLDready)*(m-1))
+    H4c= nrow(RLDready)*(m-1)*E4c/qchisq(1-alpha, nrow(RLDready)*(m-1))
+    U2= (H2-E2)^2
+    U4s= (H4s-E4s)^2 
+    U4c= (H4c-E4c)^2
+  }
+  ############Reference-scale
+  Hd=(abs(mean(c(as.matrix(RLDready))) - mean(c(as.matrix(TESTready))))+
+        qt(1-alpha, nrow(TESTready) + nrow(RLDready) - 2)*
+        sqrt(MSBT/(nrow(TESTready)*m)+MSBR/(nrow(RLDready)*m)))^2
+  H1= (nrow(TESTready)-1)*E1/qchisq(alpha, nrow(TESTready)-1)
+  H3s= (nrow(RLDready)-1)*E3s/qchisq(1-alpha, nrow(RLDready)-1)
+  Ud= (Hd-Ed)^2
+  U1= (H1-E1)^2
+  U3s= (H3s-E3s)^2
+  ############Constant-scale  
+  H3c= (nrow(RLDready)-1)*E3c/qchisq(1-alpha, nrow(RLDready)-1)
+  U3c= (H3c-E3c)^2
+  
+  # Reference-scaled
+  Uq1= sum(c(Ud,U1,U2,U3s,U4s))
+  # Constant-scaled
+  Uq2= sum(c(Ud,U1,U2,U3c,U4c))
+  
+  #H value
+  Hn1= Eq1+sqrt(Uq1)
+  Hn2= Eq2+sqrt(Uq2)
+  
+  ###conclusion
+  sigmar=sqrt(MSBR/m+(m-1)*MSWR/m)
+  sigmat=sqrt(MSBT/m+(m-1)*MSWT/m)
+  SigmaR=c(sigmar,"Hn","Result")
+  
+  if(is.na(sigmar)|sigmar==0){
+    ResultP[i]=c(NA)
+    
+  }else if (sigmar>0.1&Hn1<0){
+    ResultP[i]=c("Pass")
+    
+  }else if(sigmar<0.1&Hn2<0){
+    ResultP[i]=c("Pass")
+  }else if(sigmar>0.1&Hn1>0){
+    ResultP[i]=c("Fail")
+  }else{
+    ResultP[i]=c("Fail")
+  }
+  
+  
+  #ABE
+  nt<-length(rownames(TEST))
+  nr<-length(rownames(RLD))
+  meant<-mean(c(as.matrix(TESTready)))
+  meanr<-mean(c(as.matrix(RLDready)))
+  vart <- var(apply(TESTready,1,mean))
+  varr <- var(apply(RLDready,1,mean))
+  
+  
+  # 计算合并方差 (Pooled Variance)
+  pooledvar <- ((nt - 1) * vart + (nr - 1) * varr) / (nt + nr - 2)
+  # 计算自由度
+  df <- nt+nr-2
+  # 计算 t 分位数
+  t_value <- qt(1-Aalpha/2, df)  # 95% 置信区间，双尾
+  # 计算置信区间
+  ci_lower[i] <- 100*exp((meant - meanr) - t_value*sqrt(pooledvar)*sqrt(1/nt+1/nr))
+  ci_upper[i] <- 100*exp((meant - meanr) + t_value*sqrt(pooledvar)*sqrt(1/nt+1/nr))
+  ###conclusion
+  
+  if(is.na(ci_lower[i])) {
+    ResultA[i]=c(NA)
+  }else if(ci_lower[i]>85&ci_upper[i]<117.65)
+  {
+    ResultA[i]=c("Pass")
+  }else{
+    ResultA[i]=c("Fail")
+  }    
+   
+}
+
+wtable<-data.frame(cbind(Index,ci_lower,ci_upper,ResultA,ResultP))
+colnames(wtable)<-c("Index","ABE_ci_lower","ABE_ci_upper","ABE","PBE")
+wtable$ABE_ci_lower<-round( as.numeric(wtable$ABE_ci_lower),digits = 2)
+wtable$ABE_ci_upper<-round( as.numeric(wtable$ABE_ci_upper),digits = 2)
+Conclusion=format(wtable)
+options(scipen=200)
+do.call(grid.arrange,c(list(tableGrob(Conclusion)),ncol=1,top = "Result of ABE&PBE"))
+

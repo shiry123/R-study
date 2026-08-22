@@ -1,0 +1,316 @@
+# app.R - APSD 批量计算器（手动加载 sheet，预览前10行）
+
+library(shiny)
+library(readxl)
+library(DT)
+
+# ---------- 原始 APSD 函数（未修改）----------
+APSD = function(equipment=c("ACI","NGI"), method=c("C","A"), mass, FR, result=c("MMAD","GSD","FPD")){
+  equipment=match.arg(equipment)
+  method=match.arg(method)
+  result=match.arg(result)
+  
+  mass=unlist(as.numeric(mass))
+  mass[is.na(mass)]=0
+  if(sum(mass) == 0) {
+    if(result == "MMAD") return(NA)
+    if(result == "GSD") return("NA (zero mass)")
+    if(result == "FPD") return(0)
+  }
+  cm.temp=append(cumsum(rev(mass))/sum(mass),0,0)
+  cm=rev(cm.temp[-length(cm.temp)])
+  z=ifelse(is.infinite(qnorm(cm)),NA,qnorm(cm))
+  
+  ###ECD calculation part
+  if(equipment=="ACI"){
+    ECD28.3=c(9.0,5.8,4.7,3.3,2.1,1.1,0.7,0.43,0)
+    ECD60=c(8.6,6.5,4.4,3.2,1.9,1.2,0.55,0.26,0)
+    ECD90=c(8,6.5,5.2,3.5,2.6,1.7,1,0.22,0)
+    if(FR < 60){
+      ECD=ECD28.3*(28.3/FR)^0.5
+    }else if(FR >=60 & FR<90){
+      ECD=ECD60*(60/FR)^0.5
+    }else{
+      ECD=ECD90*(90/FR)^0.5
+    }
+  }
+  if(equipment=="NGI"){
+    ECD15=c(14.1,8.61,5.39,3.3,2.08,1.36,0.98,0)
+    ECD60=c(8.06,4.46,2.82,1.66,0.94,0.55,0.34,0)
+    factor1=c(0.54,0.52,0.50,0.47,0.52,0.60,0.67,0)
+    factor2=c(0.2692,0.4279,0.4339,0.5208,0.6130,0.7124,0.8598,0)
+    if(FR >= 30){
+      ECD=ECD60*(60/FR)^factor1
+    }else{
+      ECD=ECD15*(15/FR)^factor2
+    }
+  }
+  ###combine ECD and the z score, delete the data with NA
+  Datacombine <- data.frame(mass=mass,ECD=ECD,z=z)
+  
+  ###Do regression according to the requirement
+  if(method=="C"){
+    ######CITDAS: Regression with conditions
+    MMADindex=which(Datacombine$z<0)[1]
+    if(is.na(MMADindex) || MMADindex == 1) {
+      mod_all = lm(z~log(ECD), data=Datacombine)
+      MMAD = exp((0-coef(mod_all)[1])/coef(mod_all)[2])
+    } else {
+      mod1=lm(z~log(ECD), data=Datacombine[(MMADindex-1):MMADindex,])
+      MMAD=exp((0-coef(mod1)[1])/coef(mod1)[2])
+    }
+    SizeXindex=ifelse(is.na(which(Datacombine$z<1)[1]),0,which(Datacombine$z<1)[1])
+    SizeYindex=ifelse(is.na(which(Datacombine$z<(-1))[1]),0,which(Datacombine$z<(-1))[1])
+    FPDindex=which(Datacombine$ECD<5)[1]
+    if(is.na(FPDindex) || FPDindex == 1) {
+      mod_all = lm(z~log(ECD), data=Datacombine)
+      prob = pnorm(coef(mod_all)[2]*log(5)+coef(mod_all)[1])
+      FPD = prob * sum(Datacombine$mass, na.rm=TRUE)
+    } else {
+      mod3=lm(z~log(ECD), data=Datacombine[(FPDindex-1):FPDindex,])
+      FPD=pnorm(coef(mod3)[2]*log(5)+coef(mod3)[1])*sum(Datacombine$mass, na.rm=TRUE)
+    }
+    if(SizeXindex>1){
+      mod2=lm(z~log(ECD), data=Datacombine[(SizeXindex-1):SizeXindex,])
+      SizeX=exp((1-coef(mod2)[1])/coef(mod2)[2])
+      GSD=SizeX/MMAD
+    }else if(SizeXindex==1 & SizeYindex>1){
+      mod4=lm(z~log(ECD), data=Datacombine[(SizeYindex-1):SizeYindex,])
+      SizeY=exp((-1-coef(mod4)[1])/coef(mod4)[2])
+      GSD=MMAD/SizeY
+    }else{
+      mod=lm(z~log(ECD), data=Datacombine)
+      sizeX=exp((1-coef(mod)[1])/coef(mod)[2])
+      GSD=sizeX/MMAD
+    }
+    Subsetcheck<-subset(Datacombine,z>-1&z<1)
+    if(nrow(Subsetcheck) >= 2) {
+      mod5=summary(lm(z~log(ECD), data=Subsetcheck))
+      if(mod5$r.squared<0.95) GSD=paste("NA","R-square<0.95")
+    }
+    percent=(mass/sum(mass))[[1]]
+    if(length(percent) > 0 && (percent[1]>0.5 | tail(percent[percent!= 0],n = 1)>0.5 | sum(cm>0.01)<3)){
+      GSD=paste("NA","Data deposit extreme")
+    }
+    if(sum(cm>0.01)<3) FPD=paste("LOD","Data deposit extreme")
+    if(pnorm(coef(mod3)[2]*log(5)+coef(mod3)[1])<0.02) FPD=paste("LOD","Related cumulative mass percent<2%")
+  }
+  if(method=="A"){
+    mod=lm(z~log(ECD), data=Datacombine)
+    MMAD=exp((0-coef(mod)[1])/coef(mod)[2])
+    sizeX=exp((1-coef(mod)[1])/coef(mod)[2])
+    GSD=sizeX/MMAD
+    FPD=sum(subset(Datacombine,ECD<5,select=mass), na.rm = TRUE)
+  }
+  switch (result,
+          "MMAD" = return(MMAD),
+          "GSD" = return(GSD),
+          "FPD" = return(FPD))
+}
+
+# ---------- UI ----------
+ui <- fluidPage(
+  titlePanel("APSD 批量计算器（手动加载工作表，预览前10行）"),
+  sidebarLayout(
+    sidebarPanel(
+      h4("1. 上传文件"),
+      fileInput("file", "选择 Excel 文件 (.xlsx, .xls) 或 CSV",
+                accept = c(".csv", ".xlsx", ".xls")),
+      uiOutput("sheet_ui"),
+      helpText("格式要求：第一行为列名，第一列为样品名称，其余列为质量数据。"),
+      actionButton("load", "加载数据", class = "btn-info", icon = icon("upload")),
+      hr(),
+      h4("2. 计算参数"),
+      selectInput("equip", "设备类型", choices = c("ACI", "NGI")),
+      selectInput("method", "计算方法", choices = c("C", "A")),
+      numericInput("fr", "流速 (L/min)", value = 28.3, min = 0, step = 0.1),
+      hr(),
+      actionButton("calc", "开始计算", class = "btn-primary"),
+      br(), br(),
+      downloadButton("download", "导出结果 (CSV)")
+    ),
+    mainPanel(
+      h4(textOutput("preview_title")),
+      tableOutput("preview"),
+      h4("计算结果（数值保留三位小数）"),
+      DT::dataTableOutput("results")
+    )
+  )
+)
+
+# ---------- Server ----------
+server <- function(input, output, session) {
+  
+  values <- reactiveValues(
+    raw_data = NULL,      # 原始数据（预处理后）
+    results = NULL,       # 计算结果
+    na_replaced = FALSE,
+    na_count = 0
+  )
+  
+  # 获取 Excel 工作表名称（仅当上传 Excel 时）
+  observeEvent(input$file, {
+    req(input$file)
+    ext <- tools::file_ext(input$file$name)
+    if(ext %in% c("xlsx", "xls")) {
+      sheets <- excel_sheets(input$file$datapath)
+      updateSelectInput(session, "sheet", choices = sheets, selected = sheets[1])
+    }
+    # 重置所有 reactive 值
+    values$raw_data <- NULL
+    values$results <- NULL
+    values$na_replaced <- FALSE
+    values$na_count <- 0
+    output$preview <- renderTable(NULL)
+    output$results <- DT::renderDataTable(NULL)
+  })
+  
+  # 显示工作表选择框（仅当 Excel 文件）
+  output$sheet_ui <- renderUI({
+    req(input$file)
+    ext <- tools::file_ext(input$file$name)
+    if(ext %in% c("xlsx", "xls")) {
+      selectInput("sheet", "选择工作表", choices = NULL)
+    } else if(ext == "csv") {
+      helpText("CSV 文件无需选择工作表，点击「加载数据」即可。")
+    }
+  })
+  
+  # 手动加载数据：读取选中的工作表（或 CSV）
+  observeEvent(input$load, {
+    req(input$file)
+    ext <- tools::file_ext(input$file$name)
+    df <- NULL
+    tryCatch({
+      if(ext == "csv") {
+        df <- read.csv(input$file$datapath, header = TRUE, stringsAsFactors = FALSE,
+                       na.strings = c("", "NA", "NULL", "N/A", "#N/A", "-"))
+      } else if(ext %in% c("xlsx", "xls")) {
+        req(input$sheet)
+        df <- read_excel(input$file$datapath, sheet = input$sheet, col_names = TRUE,
+                         na = c("", "NA", "NULL", "N/A", "#N/A", "-"))
+        df <- as.data.frame(df)
+      } else {
+        showNotification("不支持的文件格式", type = "error")
+        return()
+      }
+      
+      # 验证列数
+      if(ncol(df) < 2) {
+        showNotification("文件至少需要两列（样品名 + 至少一列质量数据）", type = "error")
+        return()
+      }
+      
+      # 第一列作为样品名
+      df[[1]] <- as.character(df[[1]])
+      names(df)[1] <- "Sample"
+      
+      # 将质量列转为数值，NA -> 0
+      na_cnt <- 0
+      for(col in names(df)[-1]) {
+        num_vals <- suppressWarnings(as.numeric(df[[col]]))
+        na_cnt <- na_cnt + sum(is.na(num_vals))
+        num_vals[is.na(num_vals)] <- 0
+        df[[col]] <- num_vals
+      }
+      
+      values$raw_data <- df
+      values$na_replaced <- (na_cnt > 0)
+      values$na_count <- na_cnt
+      
+      # 显示预览（前10行）
+      output$preview <- renderTable({
+        head(df, 10)
+      })
+      
+      if(na_cnt > 0) {
+        showNotification(paste("⚠️ 数据中含有", na_cnt, "个缺失值，已自动替换为 0。"), 
+                         type = "warning", duration = 8)
+      } else {
+        showNotification("数据加载成功！", type = "message")
+      }
+      
+      # 清空之前的结果，因为数据变了
+      values$results <- NULL
+      output$results <- DT::renderDataTable(NULL)
+      
+    }, error = function(e) {
+      showNotification(paste("加载失败:", e$message), type = "error")
+    })
+  })
+  
+  # 动态预览标题
+  output$preview_title <- renderText({
+    if(values$na_replaced) {
+      "数据预览（前10行，NA 已替换为 0）"
+    } else {
+      "数据预览（前10行）"
+    }
+  })
+  
+  # 开始计算
+  observeEvent(input$calc, {
+    req(values$raw_data)
+    df <- values$raw_data
+    mass_cols <- df[, -1, drop = FALSE]
+    mass_matrix <- as.matrix(mass_cols)
+    mode(mass_matrix) <- "numeric"
+    
+    n <- nrow(mass_matrix)
+    res_MMAD <- vector("list", n)
+    res_GSD  <- vector("list", n)
+    res_FPD  <- vector("list", n)
+    
+    withProgress(message = "正在计算...", value = 0, {
+      for(i in 1:n) {
+        incProgress(1/n, detail = paste("样品", i))
+        mass_vec <- mass_matrix[i, ]
+        res_MMAD[[i]] <- tryCatch(APSD(input$equip, input$method, mass_vec, input$fr, "MMAD"),
+                                  error = function(e) NA)
+        res_GSD[[i]]  <- tryCatch(APSD(input$equip, input$method, mass_vec, input$fr, "GSD"),
+                                  error = function(e) NA)
+        res_FPD[[i]]  <- tryCatch(APSD(input$equip, input$method, mass_vec, input$fr, "FPD"),
+                                  error = function(e) NA)
+      }
+    })
+    
+    format_result <- function(x) {
+      if(is.numeric(x) && !is.na(x)) sprintf("%.3f", x)
+      else if(is.numeric(x) && is.na(x)) "NA"
+      else as.character(x)
+    }
+    
+    out_df <- data.frame(
+      Sample = df$Sample,
+      MMAD = sapply(res_MMAD, format_result),
+      GSD  = sapply(res_GSD, format_result),
+      FPD  = sapply(res_FPD, format_result),
+      stringsAsFactors = FALSE
+    )
+    values$results <- out_df
+    
+    output$results <- DT::renderDataTable({
+      DT::datatable(out_df, options = list(pageLength = 15, scrollX = TRUE))
+    })
+    
+    showNotification("计算完成！", type = "message")
+  })
+  
+  # 导出结果
+  output$download <- downloadHandler(
+    filename = function() {
+      paste0("APSD_results_", Sys.Date(), ".csv")
+    },
+    content = function(file) {
+      req(values$results)
+      write.csv(values$results, file, row.names = FALSE)
+    }
+  )
+}
+
+shinyApp(ui, server)
+
+
+
+## 运行
+shiny::runApp("D:/Mywd/PBE-APSD/apsd_calc_app.R")
