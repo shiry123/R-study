@@ -1,0 +1,355 @@
+library(shiny)
+library(readxl)
+library(DT)
+library(drc)
+library(writexl)
+
+# ==========================================
+# 1. 定义计算函数 (自动排除浓度=0)
+#    返回: b, c, d, e, EC50, R2 (e 仅内部使用，不输出)
+# ==========================================
+calculate_drc_metrics <- function(conc, resp) {
+  df_clean <- data.frame(
+    conc = suppressWarnings(as.numeric(conc)),
+    resp = suppressWarnings(as.numeric(resp))
+  )
+  df_clean <- df_clean[complete.cases(df_clean), ]
+  df_clean <- df_clean[df_clean$conc != 0, ]
+  
+  if (nrow(df_clean) < 4) {
+    return(c(b = NA_real_, c = NA_real_, d = NA_real_, e = NA_real_,
+             EC50 = NA_real_, R2 = NA_real_))
+  }
+  
+  fit <- try(drc::drm(resp ~ conc, data = df_clean, fct = LL.4()), silent = TRUE)
+  if (inherits(fit, "try-error")) {
+    return(c(b = NA_real_, c = NA_real_, d = NA_real_, e = NA_real_,
+             EC50 = NA_real_, R2 = NA_real_))
+  }
+  
+  # 提取模型系数 (LL.4 顺序: b, c, d, e)
+  coefs <- coef(fit)
+  names_coef <- names(coefs)
+  b <- if ("b" %in% names_coef) coefs["b"] else coefs[1]
+  c <- if ("c" %in% names_coef) coefs["c"] else coefs[2]
+  d <- if ("d" %in% names_coef) coefs["d"] else coefs[3]
+  e <- if ("e" %in% names_coef) coefs["e"] else coefs[4]
+  
+  # EC50 via ED
+  ec50_val <- try(drc::ED(fit, 50, display = FALSE)[1], silent = TRUE)
+  ec50_out <- ifelse(inherits(ec50_val, "try-error"), NA_real_, as.numeric(ec50_val))
+  
+  # R²
+  pred_val <- predict(fit)
+  r2_val <- cor(df_clean$resp, pred_val)^2
+  
+  return(c(b = unname(b), c = unname(c), d = unname(d), e = unname(e),
+           EC50 = ec50_out, R2 = r2_val))
+}
+
+# ==========================================
+# 2. UI 界面设计 (无改动)
+# ==========================================
+ui <- fluidPage(
+  titlePanel("DRC 分析工具 (自动排除未采集数据)"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      h4("1. 数据导入"),
+      fileInput("excel_file", "上传 Excel 文件", accept = c(".xlsx", ".xls")),
+      uiOutput("sheet_selector"),
+      actionButton("load_data_btn", "加载数据", class = "btn-primary"),
+      
+      hr(),
+      
+      h4("2. 参数设置"),
+      selectizeInput("col_conc", "浓度列 (Conc)", choices = NULL),
+      selectizeInput("col_resp", "响应值列 (可多选，如 rep1, rep2, ...)",
+                     choices = NULL, multiple = TRUE),
+      selectizeInput("group_cols", "分组变量 (可多选，如 Batch + SampleID)",
+                     choices = NULL, multiple = TRUE),
+      
+      hr(),
+      
+      h4("3. 计算模式"),
+      radioButtons("calc_mode", "选择分析方法:",
+                   choices = c(
+                     "单独计算每个重复" = "individual",
+                     "先计算重复均值再拟合" = "mean_first"
+                   ),
+                   selected = "individual"),
+      
+      hr(),
+      
+      actionButton("calc_btn", "开始计算", class = "btn-success btn-lg", width = "100%")
+    ),
+    
+    mainPanel(
+      tabsetPanel(
+        tabPanel("计算结果",
+                 br(),
+                 fluidRow(
+                   column(6, downloadButton("downloadResults", "导出计算结果")),
+                   column(6, radioButtons("exportFormat", "导出格式:",
+                                          choices = c("CSV", "Excel"),
+                                          inline = TRUE, selected = "CSV"))
+                 ),
+                 br(),
+                 DTOutput("results_table")),
+        tabPanel("原始数据预览", DTOutput("raw_preview"))
+      )
+    )
+  )
+)
+
+# ==========================================
+# 3. Server 逻辑处理 (移除结果中的 e 列)
+# ==========================================
+server <- function(input, output, session) {
+  
+  raw_data <- reactiveVal(NULL)
+  
+  output$sheet_selector <- renderUI({
+    req(input$excel_file)
+    sheets <- excel_sheets(input$excel_file$datapath)
+    selectInput("sheet_selector", "选择工作表", choices = sheets)
+  })
+  
+  observeEvent(input$load_data_btn, {
+    req(input$excel_file)
+    sheet <- input$sheet_selector %||% excel_sheets(input$excel_file$datapath)[1]
+    
+    df <- tryCatch({
+      read_excel(input$excel_file$datapath, sheet = sheet)
+    }, error = function(e) {
+      showNotification(paste("读取失败:", e$message), type = "error")
+      NULL
+    })
+    
+    if (!is.null(df)) {
+      raw_data(df)
+      col_names <- names(df)
+      updateSelectizeInput(session, "col_conc", choices = col_names, selected = col_names[1])
+      updateSelectizeInput(session, "col_resp", choices = col_names, selected = col_names[2])
+      updateSelectizeInput(session, "group_cols", choices = col_names, server = TRUE)
+      
+      output$raw_preview <- renderDT({
+        datatable(head(df, 15), options = list(scrollX = TRUE), 
+                  caption = paste0("仅显示前 15 行（总行数：", nrow(df), "）"))
+      })
+    }
+  })
+  
+  results_df <- eventReactive(input$calc_btn, {
+    req(raw_data(), input$col_conc, input$col_resp)
+    
+    df <- raw_data()
+    conc_col <- input$col_conc
+    resp_cols <- input$col_resp
+    group_vars <- input$group_cols
+    mode <- input$calc_mode
+    
+    if (!conc_col %in% names(df)) {
+      showNotification("请确保已选择有效的浓度列", type = "error")
+      return(NULL)
+    }
+    missing_resp <- setdiff(resp_cols, names(df))
+    if (length(missing_resp) > 0) {
+      showNotification(paste("以下响应列不存在:", paste(missing_resp, collapse = ", ")), type = "error")
+      return(NULL)
+    }
+    
+    if (length(group_vars) == 0) {
+      split_list <- list("All_Data" = df)
+      is_grouped <- FALSE
+    } else {
+      missing_groups <- setdiff(group_vars, names(df))
+      if (length(missing_groups) > 0) {
+        showNotification(paste("以下分组列不存在:", paste(missing_groups, collapse = ", ")), type = "error")
+        return(NULL)
+      }
+      groups <- interaction(df[group_vars], drop = TRUE, sep = "_")
+      split_list <- split(df, groups)
+      is_grouped <- TRUE
+    }
+    
+    all_results <- list()
+    
+    # 模式1：单独计算每个重复
+    if (mode == "individual") {
+      for (g_name in names(split_list)) {
+        sub_df <- split_list[[g_name]]
+        for (resp_col in resp_cols) {
+          resp_vals <- sub_df[[resp_col]]
+          if (all(is.na(resp_vals))) {
+            status_text <- "未采集数据"
+            valid_n <- 0
+            metrics <- c(b = NA_real_, c = NA_real_, d = NA_real_, e = NA_real_,
+                         EC50 = NA_real_, R2 = NA_real_)
+          } else {
+            valid_idx <- complete.cases(sub_df[[conc_col]], resp_vals) & sub_df[[conc_col]] != 0
+            valid_n <- sum(valid_idx)
+            
+            if (valid_n < 4) {
+              status_text <- "❌ 拟合失败"
+              metrics <- c(b = NA_real_, c = NA_real_, d = NA_real_, e = NA_real_,
+                           EC50 = NA_real_, R2 = NA_real_)
+            } else {
+              c_vec <- as.numeric(sub_df[[conc_col]])
+              r_vec <- as.numeric(resp_vals)
+              metrics <- calculate_drc_metrics(c_vec, r_vec)
+              status_text <- ifelse(is.na(metrics["EC50"]), "❌ 拟合失败", "成功")
+            }
+          }
+          
+          # 【修改】不再包含 e 列
+          row_data <- list(
+            Response_Var = resp_col,
+            N_Points = valid_n,
+            b = metrics["b"],
+            c = metrics["c"],
+            d = metrics["d"],
+            EC50 = metrics["EC50"],
+            R_Squared = metrics["R2"],
+            Status = status_text
+          )
+          if (is_grouped) {
+            group_values <- as.list(sub_df[1, group_vars, drop = FALSE])
+            row_data <- c(group_values, row_data)
+          } else {
+            row_data <- c(list(Group = g_name), row_data)
+          }
+          all_results[[length(all_results) + 1]] <- row_data
+        }
+      }
+    }
+    
+    # 模式2：先计算重复均值再拟合
+    else if (mode == "mean_first") {
+      for (g_name in names(split_list)) {
+        sub_df <- split_list[[g_name]]
+        conc_vec <- as.numeric(sub_df[[conc_col]])
+        resp_matrix <- as.matrix(sub_df[, resp_cols, drop = FALSE])
+        resp_matrix <- apply(resp_matrix, 2, function(x) as.numeric(as.character(x)))
+        
+        if (all(is.na(resp_matrix))) {
+          status_text <- "未采集数据"
+          valid_n <- 0
+          metrics <- c(b = NA_real_, c = NA_real_, d = NA_real_, e = NA_real_,
+                       EC50 = NA_real_, R2 = NA_real_)
+        } else {
+          mean_resp <- rowMeans(resp_matrix, na.rm = TRUE)
+          keep <- !is.na(conc_vec) & !is.na(mean_resp) & conc_vec != 0
+          valid_n <- sum(keep)
+          
+          if (valid_n < 4) {
+            status_text <- "❌ 拟合失败"
+            metrics <- c(b = NA_real_, c = NA_real_, d = NA_real_, e = NA_real_,
+                         EC50 = NA_real_, R2 = NA_real_)
+          } else {
+            conc_vec_clean <- conc_vec[keep]
+            mean_resp_clean <- mean_resp[keep]
+            metrics <- calculate_drc_metrics(conc_vec_clean, mean_resp_clean)
+            status_text <- ifelse(is.na(metrics["EC50"]), "❌ 拟合失败", "成功")
+          }
+        }
+        
+        # 【修改】不再包含 e 列
+        row_data <- list(
+          N_Points = valid_n,
+          b = metrics["b"],
+          c = metrics["c"],
+          d = metrics["d"],
+          EC50 = metrics["EC50"],
+          R_Squared = metrics["R2"],
+          Status = status_text
+        )
+        if (is_grouped) {
+          group_values <- as.list(sub_df[1, group_vars, drop = FALSE])
+          row_data <- c(group_values, row_data)
+        } else {
+          row_data <- c(list(Group = g_name), row_data)
+        }
+        all_results[[length(all_results) + 1]] <- row_data
+      }
+    }
+    
+    if (length(all_results) == 0) {
+      showNotification("没有生成任何结果，请检查数据", type = "warning")
+      return(NULL)
+    }
+    
+    final_res <- do.call(rbind.data.frame, all_results)
+    # 对数值列进行四舍五入（移除 e）
+    num_cols <- c("b", "c", "d", "EC50", "R_Squared")
+    for (col in num_cols) {
+      if (col %in% names(final_res)) {
+        final_res[[col]] <- round(as.numeric(final_res[[col]]), 4)
+      }
+    }
+    
+    # 排除 Status == "未采集数据" 的行
+    final_res <- final_res[final_res$Status != "未采集数据", ]
+    
+    if (nrow(final_res) == 0) {
+      showNotification("所有结果均为“未采集数据”，没有可显示的有效结果。", type = "warning")
+      return(NULL)
+    }
+    
+    # 调整列顺序（移除 e）
+    if (mode == "individual") {
+      if (is_grouped) first_cols <- group_vars else first_cols <- "Group"
+      other_cols <- c("Response_Var", "N_Points", "b", "c", "d", "EC50", "R_Squared", "Status")
+      final_res <- final_res[, c(first_cols, other_cols)]
+    } else {
+      if (is_grouped) first_cols <- group_vars else first_cols <- "Group"
+      other_cols <- c("N_Points", "b", "c", "d", "EC50", "R_Squared", "Status")
+      final_res <- final_res[, c(first_cols, other_cols)]
+    }
+    
+    return(final_res)
+  })
+  
+  # --- 渲染结果表格 ---
+  output$results_table <- renderDT({
+    req(results_df())
+    df <- results_df()
+    
+    datatable(df, options = list(pageLength = 15, scrollX = TRUE), rownames = FALSE) %>%
+      formatStyle(
+        'Status',
+        target = 'row',
+        backgroundColor = styleEqual(
+          c('成功', '❌ 拟合失败'),
+          c('#ccffcc', '#ffcccc')
+        )
+      )
+  })
+  
+  # --- 导出计算结果 ---
+  output$downloadResults <- downloadHandler(
+    filename = function() {
+      fmt <- input$exportFormat
+      if (fmt == "CSV") {
+        paste0("DRC_results_", Sys.Date(), ".csv")
+      } else {
+        paste0("DRC_results_", Sys.Date(), ".xlsx")
+      }
+    },
+    content = function(file) {
+      res <- results_df()
+      if (is.null(res)) {
+        showNotification("没有可导出的结果，请先点击“开始计算”。", type = "error")
+        return()
+      }
+      fmt <- input$exportFormat
+      if (fmt == "CSV") {
+        write.csv(res, file, row.names = FALSE, fileEncoding = "UTF-8")
+      } else {
+        write_xlsx(res, file)
+      }
+    }
+  )
+}
+
+shinyApp(ui, server)
