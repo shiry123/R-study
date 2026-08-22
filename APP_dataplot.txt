@@ -1,10 +1,14 @@
-# app.R (修复版)
 library(shiny)
 library(readxl)
 library(ggplot2)
 library(DT)
 library(dplyr)
 library(tidyr)
+library(plotly)
+library(scales)
+
+NO_GROUP <- "无"
+NO_FILTER <- "无"
 
 apply_trans <- function(x, method) {
   if (method == "none") return(x)
@@ -20,29 +24,26 @@ apply_trans <- function(x, method) {
 }
 
 ui <- fluidPage(
-  titlePanel("Excel 数据可视化工具（多Y：形状/线型区分）"),
+  titlePanel("Excel 数据可视化工具（图例合并，颜色按分组，形状/线型按Y）"),
   sidebarLayout(
     sidebarPanel(
+      width = 3,   # 侧边栏宽度设为3
       fileInput("file", "上传 Excel 文件", accept = c(".xlsx", ".xls")),
       uiOutput("sheet_ui"),
       actionButton("load_data", "加载数据", class = "btn-primary"),
-      br(), br(),
-      
+      br(),
       h4("数据筛选（可选）"),
       uiOutput("filter_var_ui"),
       uiOutput("filter_value_ui"),
       br(),
-      
       uiOutput("plot_type_ui"),
-      uiOutput("xvar_ui"),
-      uiOutput("yvar_multi_ui"),
-      uiOutput("groupvar_ui"),
-      uiOutput("facet_ui"),
       uiOutput("trans_ui"),
-      
-      sliderInput("x_angle", "X 轴标签旋转角度 (度)", 
-                  min = 0, max = 90, value = 0, step = 5),
-      
+      sliderInput("x_angle", "X 轴标签旋转角度 (度)", min = 0, max = 90, value = 0, step = 5),
+      h5("Y 轴范围（留空自动）"),
+      fluidRow(
+        column(6, numericInput("y_lim_min", "最小值", value = NA)),
+        column(6, numericInput("y_lim_max", "最大值", value = NA))
+      ),
       conditionalPanel(
         condition = "input.plot_type == 'bar'",
         checkboxInput("bar_error", "添加误差线", value = FALSE),
@@ -53,20 +54,39 @@ ui <- fluidPage(
                        selected = "sd")
         )
       ),
-      
+      # hr(),  # 间隔
+      h4("参考线（蓝色虚线）"),
+      fluidRow(
+        column(6, textInput("hline_values", "水平线 Y值", placeholder = "如: 0, 10")),
+        column(6, textInput("vline_values", "竖直线 X值", placeholder = "如: 5, 15 (仅数值X)"))
+      ),
+      checkboxInput("add_shadow", "添加阴影（需输入三个值）", value = FALSE),
       hr(),
       helpText(
-        "散点图 / 折线图支持多 Y 变量：",
-        "- 散点图：不同 Y 用不同形状，分组变量用颜色区分",
-        "- 折线图：不同 Y 用不同线型，分组变量用颜色区分，并自动确保连线正确",
+        "散点图 / 折线图支持多 Y 变量。图例合并，颜色按分组变量区分，形状/线型按 Y 变量自动分配。",
         "柱形图 / 箱线图仅支持单 Y 变量。",
-        "X 轴支持 log10/ln 变换，筛选、分面功能完整。"
+        "参考线阴影：若启用且输入三个数值，将在首尾之间绘制灰色半透明区域，三条线变为绿色虚线。"
       )
     ),
     mainPanel(
+      width = 9,                      # 主面板宽度 9/12
       tabsetPanel(
         tabPanel("数据预览", DTOutput("data_table")),
-        tabPanel("图形", plotOutput("plot", height = "600px"))
+        tabPanel("图形",
+                 wellPanel(
+                   style = "padding: 8px; margin-bottom: 10px;",
+                   fluidRow(
+                     column(3, uiOutput("xvar_ui")),
+                     column(3, uiOutput("yvar_multi_ui")),
+                     column(3, uiOutput("groupvar_ui")),
+                     column(3, uiOutput("facet_ui"))
+                   ),
+                   fluidRow(
+                     column(12, uiOutput("extra_vars_ui"))
+                   )
+                 ),
+                 plotlyOutput("plot", height = "80vh")   # 高度自适应，可改为 "800px"
+        )
       )
     )
   )
@@ -100,12 +120,12 @@ server <- function(input, output, session) {
   
   output$filter_var_ui <- renderUI({
     req(data_raw())
-    choices <- c("无", names(data_raw()))
-    selectInput("filter_var", "筛选变量（分类变量）", choices = choices, selected = "无")
+    choices <- c(NO_FILTER, names(data_raw()))
+    selectInput("filter_var", "筛选变量（分类变量）", choices = choices, selected = NO_FILTER)
   })
   
   output$filter_value_ui <- renderUI({
-    req(data_raw(), input$filter_var, input$filter_var != "无")
+    req(data_raw(), input$filter_var, input$filter_var != NO_FILTER)
     df <- data_raw()
     var <- input$filter_var
     unique_vals <- as.character(unique(df[[var]]))
@@ -114,9 +134,10 @@ server <- function(input, output, session) {
   })
   
   filtered_data <- reactive({
-    req(data_raw())
+    req(data_raw(), input$filter_var)
     df <- data_raw()
-    if (input$filter_var != "无" && !is.null(input$filter_value) && length(input$filter_value) > 0) {
+    if (!is.null(input$filter_var) && input$filter_var != NO_FILTER && 
+        !is.null(input$filter_value) && length(input$filter_value) > 0) {
       var <- input$filter_var
       df <- df[df[[var]] %in% input$filter_value, , drop = FALSE]
       if (nrow(df) == 0) {
@@ -165,8 +186,8 @@ server <- function(input, output, session) {
   
   output$groupvar_ui <- renderUI({
     req(data_raw())
-    choices <- c("无", names(data_raw()))
-    selectInput("groupvar", "分组变量 (颜色)", choices = choices, selected = "无")
+    choices <- c(NO_GROUP, names(data_raw()))
+    selectInput("groupvar", "分组变量 (颜色)", choices = choices, selected = NO_GROUP)
   })
   
   output$facet_ui <- renderUI({
@@ -186,10 +207,19 @@ server <- function(input, output, session) {
     }
   })
   
+  output$extra_vars_ui <- renderUI({
+    req(data_raw())
+    selectInput("extra_vars", 
+                "额外悬停信息变量（多选，仅散点/折线有效）", 
+                choices = names(data_raw()), 
+                multiple = TRUE)
+  })
+  
   output$data_table <- renderDT({
     req(data_raw())
-    datatable(head(data_raw(), 10), options = list(scrollX = TRUE), 
-              caption = "仅显示前10行")
+    datatable(data_raw(), 
+              options = list(scrollX = TRUE, pageLength = 10), 
+              caption = "全部数据（可翻页）")
   })
   
   plot_obj <- reactive({
@@ -197,10 +227,82 @@ server <- function(input, output, session) {
     df <- filtered_data()
     x_col <- input$xvar
     y_vars <- selected_yvars()
-    group_col <- if (input$groupvar == "无") NULL else input$groupvar
+    group_col <- if (input$groupvar == NO_GROUP) NULL else input$groupvar
     facet_vars <- input$facet_vars
     plot_type <- input$plot_type
     x_angle <- input$x_angle
+    
+    apply_y_limits <- function(p) {
+      y_min <- input$y_lim_min
+      y_max <- input$y_lim_max
+      if (!is.na(y_min) || !is.na(y_max)) {
+        p <- p + coord_cartesian(ylim = c(y_min, y_max))
+      }
+      p
+    }
+    
+    apply_angle <- function(p) {
+      if (x_angle > 0) {
+        p + theme(axis.text.x = element_text(angle = x_angle, hjust = 1, vjust = 0.5),
+                  plot.margin = margin(b = 20, unit = "pt"))
+      } else {
+        p + theme(plot.margin = margin(b = 20, unit = "pt"))
+      }
+    }
+    
+    add_reference_lines <- function(p, x_is_numeric, trans_method, x_col, x_range = c(-Inf, Inf), y_range = c(-Inf, Inf)) {
+      hline_str <- trimws(input$hline_values)
+      vline_str <- trimws(input$vline_values)
+      add_shadow <- input$add_shadow
+      
+      if (nchar(hline_str) > 0) {
+        h_vals <- suppressWarnings(as.numeric(strsplit(hline_str, ",")[[1]]))
+        h_vals <- h_vals[!is.na(h_vals)]
+        if (length(h_vals) > 0) {
+          if (add_shadow && length(h_vals) == 3) {
+            p <- p + geom_rect(data = data.frame(xmin = x_range[1], xmax = x_range[2],
+                                                 ymin = min(h_vals), ymax = max(h_vals)),
+                               aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+                               fill = "grey70", alpha = 0.4, inherit.aes = FALSE) +
+              geom_hline(yintercept = h_vals, color = "green", linetype = "dashed", linewith = 0.5)
+          } else {
+            p <- p + geom_hline(yintercept = h_vals,
+                                color = "blue", linetype = "dashed", linewith = 0.8)
+          }
+        }
+      }
+      
+      if (x_is_numeric) {
+        if (nchar(vline_str) > 0) {
+          v_vals <- suppressWarnings(as.numeric(strsplit(vline_str, ",")[[1]]))
+          v_vals <- v_vals[!is.na(v_vals)]
+          if (length(v_vals) > 0) {
+            if (trans_method != "none") {
+              v_vals <- apply_trans(v_vals, trans_method)
+              v_vals <- v_vals[is.finite(v_vals)]
+            }
+            if (length(v_vals) > 0) {
+              if (add_shadow && length(v_vals) == 3) {
+                p <- p + geom_rect(data = data.frame(xmin = min(v_vals), xmax = max(v_vals),
+                                                     ymin = y_range[1], ymax = y_range[2]),
+                                   aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+                                   fill = "grey70", alpha = 0.4, inherit.aes = FALSE) +
+                  geom_vline(xintercept = v_vals,
+                             color = "green", linetype = "dashed", size = 0.5)
+              } else {
+                p <- p + geom_vline(xintercept = v_vals,
+                                    color = "blue", linetype = "dashed", size = 0.8)
+              }
+            }
+          }
+        }
+      } else {
+        if (nchar(trimws(input$vline_values)) > 0) {
+          showNotification("竖直线仅当 X 为数值变量时有效，当前 X 为因子/字符，已忽略", type = "warning")
+        }
+      }
+      return(p)
+    }
     
     if (!x_col %in% names(df)) return(NULL)
     if (!all(y_vars %in% names(df))) return(NULL)
@@ -211,21 +313,11 @@ server <- function(input, output, session) {
       return(NULL)
     }
     
-    apply_angle <- function(p) {
-      if (x_angle > 0) {
-        p + theme(axis.text.x = element_text(angle = x_angle, 
-                                             hjust = ifelse(x_angle <= 45, 1, 1), 
-                                             vjust = ifelse(x_angle <= 45, 1, 0.5)))
-      } else {
-        p
-      }
-    }
-    
-    # 柱形图 (单Y)
+    # ========== 柱形图 ==========
     if (plot_type == "bar") {
       y_var <- y_vars[1]
       if (length(y_vars) > 1) showNotification("柱形图仅支持单个 Y 变量，将使用第一个", type = "warning")
-      plot_df <- data.frame(x = factor(df[[x_col]]), y = df[[y_var]], stringsAsFactors = FALSE)
+      plot_df <- data.frame(x = factor(df[[x_col]]), y = df[[y_var]])
       if (!is.null(group_col)) plot_df$group <- df[[group_col]]
       for (fv in facet_vars) plot_df[[fv]] <- df[[fv]]
       plot_df <- plot_df[!is.na(plot_df$y), ]
@@ -240,59 +332,84 @@ server <- function(input, output, session) {
         summarise(mean = mean(y, na.rm = TRUE), sd = sd(y, na.rm = TRUE), n = n(), .groups = "drop") %>%
         mutate(se = sd / sqrt(n))
       
-      if (input$bar_error) {
-        error_type <- input$bar_error_type
-        summary_df$error <- if (error_type == "sd") summary_df$sd else summary_df$se
-        error_label <- if (error_type == "sd") "SD" else "SE"
-      }
-      
       p <- ggplot(summary_df, aes(x = x, y = mean))
       if (!is.null(group_col)) {
         p <- p + geom_col(aes(fill = group), position = position_dodge(0.9))
-        if (input$bar_error) p <- p + geom_errorbar(aes(ymin = mean - error, ymax = mean + error, group = group),
-                                                    width = 0.2, position = position_dodge(0.9))
+        if (input$bar_error) {
+          error_type <- input$bar_error_type
+          summary_df$error <- if (error_type == "sd") summary_df$sd else summary_df$se
+          p <- p + geom_errorbar(aes(ymin = mean - error, ymax = mean + error, group = group),
+                                 width = 0.2, position = position_dodge(0.9))
+        }
+        p <- p + labs(fill = group_col)
       } else {
         p <- p + geom_col(fill = "steelblue", position = position_dodge(0.9))
-        if (input$bar_error) p <- p + geom_errorbar(aes(ymin = mean - error, ymax = mean + error),
-                                                    width = 0.2, position = position_dodge(0.9))
+        if (input$bar_error) {
+          error_type <- input$bar_error_type
+          summary_df$error <- if (error_type == "sd") summary_df$sd else summary_df$se
+          p <- p + geom_errorbar(aes(ymin = mean - error, ymax = mean + error),
+                                 width = 0.2, position = position_dodge(0.9))
+        }
       }
       p <- p + labs(x = x_col, y = y_var) + theme_bw()
-      if (!is.null(group_col)) p <- p + labs(fill = group_col)
       if (length(facet_vars) > 0) {
-        facet_formula <- as.formula(paste("~", paste(facet_vars, collapse = "+")))
+        facet_formula <- reformulate(paste(facet_vars, collapse = "+"))
         p <- p + facet_wrap(facet_formula, scales = "free_x")
       }
+      p <- apply_y_limits(p)
+      x_range <- c(-Inf, Inf)
+      y_range <- range(summary_df$mean, na.rm = TRUE)
+      p <- add_reference_lines(p, x_is_numeric = FALSE, trans_method = "none", x_col = x_col,
+                               x_range = x_range, y_range = y_range)
       return(apply_angle(p))
     }
     
-    # 箱型图 (单Y)
+    # ========== 箱型图 ==========
     if (plot_type == "boxplot") {
       y_var <- y_vars[1]
       if (length(y_vars) > 1) showNotification("箱型图仅支持单个 Y 变量，将使用第一个", type = "warning")
-      plot_df <- data.frame(x = df[[x_col]], y = df[[y_var]], stringsAsFactors = FALSE)
+      plot_df <- data.frame(x = factor(df[[x_col]]), y = df[[y_var]])
       if (!is.null(group_col)) plot_df$group <- df[[group_col]]
       for (fv in facet_vars) plot_df[[fv]] <- df[[fv]]
       plot_df <- plot_df[!is.na(plot_df$y), ]
       if (nrow(plot_df) == 0) return(NULL)
       
       p <- ggplot(plot_df, aes(x = x, y = y))
-      if (!is.null(group_col)) p <- p + geom_boxplot(aes(fill = group)) + labs(fill = group_col)
-      else p <- p + geom_boxplot(fill = "steelblue")
-      p <- p + labs(x = x_col, y = y_var) + theme_bw()
-      if (is.numeric(plot_df$x) && length(unique(plot_df$x)) < 30) {
-        p <- p + aes(x = factor(x)) + labs(x = x_col)
+      if (!is.null(group_col)) {
+        p <- p + geom_boxplot(aes(fill = group)) + labs(fill = group_col)
+      } else {
+        p <- p + geom_boxplot(fill = "steelblue")
       }
+      p <- p + labs(x = x_col, y = y_var) + theme_bw()
       if (length(facet_vars) > 0) {
-        facet_formula <- as.formula(paste("~", paste(facet_vars, collapse = "+")))
+        facet_formula <- reformulate(paste(facet_vars, collapse = "+"))
         p <- p + facet_wrap(facet_formula, scales = "free_x")
       }
+      p <- apply_y_limits(p)
+      x_range <- c(-Inf, Inf)
+      y_range <- range(plot_df$y, na.rm = TRUE)
+      p <- add_reference_lines(p, x_is_numeric = FALSE, trans_method = "none", x_col = x_col,
+                               x_range = x_range, y_range = y_range)
       return(apply_angle(p))
     }
     
-    # 散点图 & 折线图（多Y）
+    # ========== 散点图 & 折线图 ==========
     id_cols <- c(x_col)
     if (!is.null(group_col)) id_cols <- c(id_cols, group_col)
     if (length(facet_vars) > 0) id_cols <- c(id_cols, facet_vars)
+    
+    extra_vars <- input$extra_vars
+    has_extra <- FALSE
+    extra_var_names <- character(0)
+    if (plot_type %in% c("scatter", "line") && !is.null(extra_vars) && length(extra_vars) > 0) {
+      extra_vars <- intersect(extra_vars, names(df))
+      if (length(extra_vars) > 0) {
+        id_cols <- c(id_cols, extra_vars)
+        has_extra <- TRUE
+        extra_var_names <- extra_vars
+      }
+    }
+    id_cols <- unique(id_cols)
     id_cols <- intersect(id_cols, names(df))
     
     df_long <- df[, c(id_cols, y_vars), drop = FALSE] %>%
@@ -326,9 +443,58 @@ server <- function(input, output, session) {
     }
     df_long$x_axis <- x_axis_val
     
-    # 散点图：修复颜色问题，只添加一次 geom_point，并正确设置 position
+    # ---- 自定义悬停文本（避免重复显示 comb） ----
+    df_long <- df_long %>%
+      mutate(hover_text = paste0(
+        "x: ", x_axis, "<br>",
+        "y: ", y_value, "<br>",
+        if (!is.null(group_col)) paste0("分组: ", .data[[group_col]], "<br>") else "",
+        "Y变量: ", y_variable,
+        if (has_extra) {
+          extra_text <- df_long %>%
+            select(all_of(extra_var_names)) %>%
+            pmap_chr(function(...) {
+              args <- list(...)
+              paste(paste(extra_var_names, "=", args), collapse = "<br>")
+            })
+          paste0("<br>", extra_text)
+        } else {
+          ""
+        }
+      ))
+    
+    assign_comb_aesthetics <- function(df, group_col, y_vars) {
+      comb_levels <- unique(interaction(df[[group_col]], df$y_variable, sep = "."))
+      comb_names <- as.character(comb_levels)
+      groups <- unique(df[[group_col]])
+      group_colors <- hue_pal()(length(groups))
+      names(group_colors) <- groups
+      y_levels <- unique(df$y_variable)
+      shapes <- 16:(16 + length(y_levels) - 1)
+      linetypes <- 1:length(y_levels)
+      names(shapes) <- y_levels
+      names(linetypes) <- y_levels
+      
+      comb_colors <- sapply(comb_names, function(x) {
+        grp <- strsplit(x, "\\.")[[1]][1]
+        group_colors[grp]
+      })
+      comb_shapes <- sapply(comb_names, function(x) {
+        yvar <- sub("^[^.]+\\.", "", x)
+        shapes[yvar]
+      })
+      comb_linetypes <- sapply(comb_names, function(x) {
+        yvar <- sub("^[^.]+\\.", "", x)
+        linetypes[yvar]
+      })
+      names(comb_colors) <- comb_names
+      names(comb_shapes) <- comb_names
+      names(comb_linetypes) <- comb_names
+      return(list(colors = comb_colors, shapes = comb_shapes, linetypes = comb_linetypes))
+    }
+    
+    # ----- 散点图 -----
     if (plot_type == "scatter") {
-      # 确定 position 参数：若 X 为分类且无分组，使用轻微抖动；若有分组则使用 dodge
       if (!x_is_numeric) {
         if (!is.null(group_col)) {
           pos <- position_dodge(width = 0.75)
@@ -340,47 +506,80 @@ server <- function(input, output, session) {
       }
       
       if (!is.null(group_col)) {
+        df_long$comb <- interaction(df_long[[group_col]], df_long$y_variable, sep = ".")
+        aes_map <- assign_comb_aesthetics(df_long, group_col, y_vars)
+        
         p <- ggplot(df_long, aes(x = x_axis, y = y_value, 
-                                 color = .data[[group_col]], shape = y_variable)) +
+                                 color = comb, shape = comb,
+                                 group = comb,
+                                 text = hover_text)) +
           geom_point(size = 2, position = pos) +
-          labs(color = group_col, shape = "Y 变量")
+          scale_color_manual(values = aes_map$colors) +
+          scale_shape_manual(values = aes_map$shapes) +
+          labs(color = "分组:Y变量", shape = "分组:Y变量") +
+          guides(color = guide_legend(order = 1), shape = guide_legend(order = 1))
       } else {
-        p <- ggplot(df_long, aes(x = x_axis, y = y_value, shape = y_variable)) +
+        p <- ggplot(df_long, aes(x = x_axis, y = y_value, 
+                                 shape = y_variable,
+                                 text = hover_text)) +
           geom_point(size = 2, color = "steelblue", position = pos) +
-          labs(shape = "Y 变量")
+          labs(shape = "Y 变量") +
+          guides(shape = guide_legend(order = 1))
       }
     }
     
-    # 折线图（保持原逻辑，无重复绘制问题）
+    # ----- 折线图 -----
     if (plot_type == "line") {
       if (!is.null(group_col)) {
-        df_long$group_id <- interaction(df_long[[group_col]], df_long$y_variable)
+        df_long$comb <- interaction(df_long[[group_col]], df_long$y_variable, sep = ".")
+        aes_map <- assign_comb_aesthetics(df_long, group_col, y_vars)
+        
         p <- ggplot(df_long, aes(x = x_axis, y = y_value, 
-                                 color = .data[[group_col]], linetype = y_variable, group = group_id)) +
-          geom_line() + geom_point(aes(shape = y_variable), size = 2) +
-          labs(color = group_col, linetype = "Y 变量", shape = "Y 变量")
+                                 color = comb, linetype = comb, shape = comb,
+                                 group = comb,
+                                 text = hover_text)) +
+          geom_line() + geom_point(size = 2) +
+          scale_color_manual(values = aes_map$colors) +
+          scale_linetype_manual(values = aes_map$linetypes) +
+          scale_shape_manual(values = aes_map$shapes) +
+          labs(color = "分组:Y变量", linetype = "分组:Y变量", shape = "分组:Y变量") +
+          guides(color = guide_legend(order = 1), 
+                 linetype = guide_legend(order = 1),
+                 shape = guide_legend(order = 1))
       } else {
         df_long$group_id <- df_long$y_variable
         p <- ggplot(df_long, aes(x = x_axis, y = y_value, 
-                                 linetype = y_variable, group = group_id)) +
-          geom_line(color = "steelblue") + geom_point(aes(shape = y_variable), size = 2, color = "steelblue") +
-          labs(linetype = "Y 变量", shape = "Y 变量")
+                                 linetype = y_variable, shape = y_variable,
+                                 group = group_id,
+                                 text = hover_text)) +
+          geom_line(color = "steelblue") + 
+          geom_point(size = 2, color = "steelblue") +
+          labs(linetype = "Y 变量", shape = "Y 变量") +
+          guides(linetype = guide_legend(order = 1), shape = guide_legend(order = 1))
       }
     }
     
+    # 分面
     if (length(facet_vars) > 0) {
-      facet_formula <- as.formula(paste("~", paste(facet_vars, collapse = "+")))
+      facet_formula <- reformulate(paste(facet_vars, collapse = "+"))
       p <- p + facet_wrap(facet_formula, scales = "free_x")
     }
     
     p <- p + labs(x = x_label, y = "值") + theme_bw()
-    apply_angle(p)
+    p <- apply_y_limits(p)
+    x_range <- range(df_long$x_axis, na.rm = TRUE)
+    y_range <- range(df_long$y_value, na.rm = TRUE)
+    p <- add_reference_lines(p, x_is_numeric = x_is_numeric, trans_method = trans_method, x_col = x_col,
+                             x_range = x_range, y_range = y_range)
+    return(apply_angle(p))
   })
   
-  output$plot <- renderPlot({
-    req(plot_obj())
-    print(plot_obj())
-  }, res = 96)
+  output$plot <- renderPlotly({
+    p <- plot_obj()
+    req(p)
+    ggplotly(p, tooltip = "text") %>%   # 只显示自定义文本，屏蔽重复美学标签
+      layout(margin = list(b = 150, l = 60, r = 30, t = 30))
+  })
 }
 
 shinyApp(ui, server)
